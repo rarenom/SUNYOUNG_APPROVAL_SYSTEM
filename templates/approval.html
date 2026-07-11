@@ -29,10 +29,22 @@ padding:20px;
 }
 
 
-
 h1{
 
 text-align:center;
+
+}
+
+
+.info{
+
+text-align:center;
+
+margin-bottom:20px;
+
+font-size:18px;
+
+font-weight:bold;
 
 }
 
@@ -61,6 +73,8 @@ border:none;
 border-radius:8px;
 
 font-size:15px;
+
+cursor:pointer;
 
 }
 
@@ -118,6 +132,16 @@ text-align:center;
 
 
 
+th{
+
+background:#0f172a;
+
+color:white;
+
+}
+
+
+
 </style>
 
 
@@ -133,6 +157,19 @@ text-align:center;
 SUNYOUNG 결재 대기함
 
 </h1>
+
+
+
+<div class="info">
+
+현재 사용자 : {{ session["name"] }}
+
+<br>
+
+권한 : {{ session["role"] }}
+
+</div>
+
 
 
 
@@ -260,7 +297,7 @@ SUNYOUNG 결재 대기함
 
 <p>
 
-결재 대기 연차가 없습니다.
+현재 결재 대기 연차가 없습니다.
 
 </p>
 
@@ -375,6 +412,7 @@ SUNYOUNG 결재 대기함
 
 
 
+
 <a href="/reject/{{row[0]}}/purchase">
 
 
@@ -410,7 +448,7 @@ SUNYOUNG 결재 대기함
 
 <p>
 
-결재 대기 구매 요청이 없습니다.
+현재 결재 대기 구매 요청이 없습니다.
 
 </p>
 
@@ -421,6 +459,7 @@ SUNYOUNG 결재 대기함
 
 
 </div>
+
 
 
 

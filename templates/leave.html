@@ -60,7 +60,25 @@ text-align:center;
 
 font-size:24px;
 
-margin-bottom:25px;
+margin-bottom:15px;
+
+}
+
+
+
+.user-info{
+
+text-align:center;
+
+background:#eef2ff;
+
+padding:10px;
+
+border-radius:10px;
+
+margin-bottom:20px;
+
+font-weight:bold;
 
 }
 
@@ -150,45 +168,6 @@ text-decoration:none;
 
 
 
-@media(max-width:600px){
-
-
-body{
-
-padding:10px;
-
-}
-
-
-.container{
-
-padding:20px;
-
-}
-
-
-
-h1{
-
-font-size:22px;
-
-}
-
-
-
-button{
-
-height:58px;
-
-font-size:17px;
-
-}
-
-
-}
-
-
-
 </style>
 
 
@@ -202,9 +181,24 @@ font-size:17px;
 <div class="container">
 
 
+
 <h1>
 📝 연차 / 반차 신청
 </h1>
+
+
+
+<div class="user-info">
+
+신청자 : {{ name }}
+
+<br>
+
+권한 : {{ role }}
+
+</div>
+
+
 
 
 
@@ -295,6 +289,7 @@ name="reason"
 placeholder="신청 사유 입력"
 
 required></textarea>
+
 
 
 

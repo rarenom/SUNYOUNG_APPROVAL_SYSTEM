@@ -8,6 +8,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/static/manifest.json">
 <meta name="theme-color" content="#0f172a">
+<link rel="icon" href="/static/icon.png">
+<link rel="apple-touch-icon" href="/static/icon.png">
 
 <title>
 SUNYOUNG 전자결재 SYSTEM
@@ -372,7 +374,6 @@ SUNYOUNG 전자결재 SYSTEM
 
 <!-- 담당자 직원관리 -->
 
-
 {% if role == "담당자" %}
 
 
@@ -387,8 +388,31 @@ SUNYOUNG 전자결재 SYSTEM
 </a>
 
 
-{% endif %}
 
+<a href="/export_leave">
+
+<button class="manage">
+
+📅 연차 현황 엑셀 저장
+
+</button>
+
+</a>
+
+
+
+<a href="/export_purchase">
+
+<button class="manage">
+
+📦 구매 요청 엑셀 저장
+
+</button>
+
+</a>
+
+
+{% endif %}
 
 
 
@@ -411,7 +435,17 @@ SUNYOUNG 전자결재 SYSTEM
 
 </div>
 
+<script>
 
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register(
+        "/static/service-worker.js"
+    );
+
+}
+
+</script>
 
 </body>
 

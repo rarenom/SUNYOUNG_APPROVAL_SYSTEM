@@ -9,15 +9,12 @@ app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
 
 
-
 # ==========================
 # DB 연결
 # ==========================
 
 def get_db():
-
     return sqlite3.connect("database.db")
-
 
 
 
@@ -28,9 +25,7 @@ def get_db():
 def init_db():
 
     conn = get_db()
-
     cur = conn.cursor()
-
 
 
     # 사용자
@@ -46,7 +41,11 @@ def init_db():
 
         name TEXT,
 
-        role TEXT
+        role TEXT,
+
+        factory_approval INTEGER DEFAULT 1,
+
+        manager_approval INTEGER DEFAULT 1
 
     )
     """)
@@ -103,36 +102,65 @@ def init_db():
 
 
 
+    # 기존 DB 컬럼 추가
+
+    try:
+        cur.execute("""
+        ALTER TABLE users
+        ADD COLUMN factory_approval INTEGER DEFAULT 1
+        """)
+    except:
+        pass
+
+
+    try:
+        cur.execute("""
+        ALTER TABLE users
+        ADD COLUMN manager_approval INTEGER DEFAULT 1
+        """)
+    except:
+        pass
+
+
+
     # 기본 사용자
 
     default_users = [
 
         (
-        "employee01",
-        "1234",
-        "홍길동",
-        "직원"
+            "employee01",
+            "1234",
+            "홍길동",
+            "직원",
+            1,
+            1
         ),
 
         (
-        "factory01",
-        "1234",
-        "김공장",
-        "공장장"
+            "factory01",
+            "1234",
+            "김홍래",
+            "공장장",
+            1,
+            1
         ),
 
         (
-        "manager01",
-        "1234",
-        "이담당",
-        "담당자"
+            "manager01",
+            "2017",
+            "박용현",
+            "담당자",
+            1,
+            1
         ),
 
         (
-        "ceo01",
-        "1234",
-        "대표",
-        "대표"
+            "ceo01",
+            "2017",
+            "남영진",
+            "대표",
+            1,
+            1
         )
 
     ]
@@ -149,13 +177,14 @@ def init_db():
             user_id,
             password,
             name,
-            role
+            role,
+            factory_approval,
+            manager_approval
             )
 
-            VALUES(?,?,?,?)
+            VALUES(?,?,?,?,?,?)
             """,
             user)
-
 
         except:
 
@@ -166,7 +195,6 @@ def init_db():
     conn.commit()
 
     conn.close()
-
 
 
 
@@ -183,7 +211,6 @@ def index():
 
 
 
-
 # ==========================
 # 로그인
 # ==========================
@@ -191,14 +218,10 @@ def index():
 @app.route("/login", methods=["GET","POST"])
 def login():
 
-
     if request.method == "POST":
 
-
-        user_id = request.form["user_id"]
-
-        password = request.form["password"]
-
+        user_id = request.form["user_id"].strip()
+        password = request.form["password"].strip()
 
 
         conn = get_db()
@@ -206,16 +229,11 @@ def login():
         cur = conn.cursor()
 
 
-
         cur.execute("""
         SELECT *
-
         FROM users
-
         WHERE user_id=?
-
         AND password=?
-
         """,
         (
             user_id,
@@ -223,9 +241,15 @@ def login():
         ))
 
 
-
         user = cur.fetchone()
 
+
+        # Render 로그 확인용
+        print("====================")
+        print("로그인 입력 ID :", user_id)
+        print("로그인 입력 PW :", password)
+        print("DB 검색 결과 :", user)
+        print("====================")
 
 
         conn.close()
@@ -235,22 +259,38 @@ def login():
         if user:
 
 
-            session["id"] = user[1]
+            session["id"] = user[0]
 
             session["name"] = user[3]
 
             session["role"] = user[4]
 
 
+            print("로그인 성공")
+            print("이름 :", session["name"])
+            print("권한 :", session["role"])
+
+
             return redirect("/main")
+
+
+
+        else:
+
+            print("로그인 실패")
 
 
 
     return render_template(
         "login.html"
     )
+
+
+
+
+
 # ==========================
-# 메인 화면
+# 메인
 # ==========================
 
 @app.route("/main")
@@ -276,6 +316,68 @@ def main():
 
 
 # ==========================
+# 승인 단계 확인 함수
+# ==========================
+
+def get_first_status(name):
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+    cur.execute("""
+    SELECT factory_approval,
+           manager_approval
+
+    FROM users
+
+    WHERE name=?
+
+    """,
+    (name,))
+
+
+    data=cur.fetchone()
+
+
+    conn.close()
+
+
+
+    if not data:
+
+        return "공장장 승인 대기"
+
+
+
+    factory=data[0]
+
+    manager=data[1]
+
+
+
+    if factory==1:
+
+        return "공장장 승인 대기"
+
+
+
+    elif manager==1:
+
+        return "담당자 승인 대기"
+
+
+
+    else:
+
+        return "대표 승인 대기"
+
+
+
+
+
+# ==========================
 # 연차 신청
 # ==========================
 
@@ -289,12 +391,18 @@ def leave():
 
 
 
-    if request.method == "POST":
+    if request.method=="POST":
 
 
-        conn = get_db()
+        conn=get_db()
 
-        cur = conn.cursor()
+        cur=conn.cursor()
+
+
+
+        status=get_first_status(
+            session["name"]
+        )
 
 
 
@@ -325,7 +433,7 @@ def leave():
 
         request.form["reason"],
 
-        "공장장 승인 대기",
+        status,
 
         datetime.now().strftime("%Y-%m-%d")
 
@@ -352,14 +460,8 @@ def leave():
         role=session["role"]
 
     )
-
-
-
-
-
-
 # ==========================
-# 구매 요청
+# 구매 신청
 # ==========================
 
 @app.route("/purchase", methods=["GET","POST"])
@@ -381,9 +483,14 @@ def purchase():
 
 
 
+        status=get_first_status(
+            session["name"]
+        )
+
+
+
         cur.execute("""
         INSERT INTO purchase_request
-
         (
         applicant,
         item,
@@ -396,7 +503,6 @@ def purchase():
         VALUES(?,?,?,?,?,?)
 
         """,
-
         (
 
         session["name"],
@@ -407,7 +513,7 @@ def purchase():
 
         request.form["reason"],
 
-        "공장장 승인 대기",
+        status,
 
         datetime.now().strftime("%Y-%m-%d")
 
@@ -439,8 +545,6 @@ def purchase():
 
 
 
-
-
 # ==========================
 # 내 신청 현황
 # ==========================
@@ -461,10 +565,6 @@ def my_request():
 
 
 
-    name=session["name"]
-
-
-
     cur.execute("""
     SELECT *
 
@@ -475,7 +575,9 @@ def my_request():
     ORDER BY id DESC
 
     """,
-    (name,))
+    (
+    session["name"],
+    ))
 
 
     leave_data=cur.fetchall()
@@ -492,7 +594,9 @@ def my_request():
     ORDER BY id DESC
 
     """,
-    (name,))
+    (
+    session["name"],
+    ))
 
 
     purchase_data=cur.fetchall()
@@ -512,6 +616,11 @@ def my_request():
         purchase_data=purchase_data
 
     )
+
+
+
+
+
 # ==========================
 # 결재 대기함
 # ==========================
@@ -519,36 +628,36 @@ def my_request():
 @app.route("/approval")
 def approval():
 
+
     if "id" not in session:
 
         return redirect("/login")
 
 
 
-    role = session["role"]
+    role=session["role"]
 
 
 
-    # 결재 순서
+    if role=="공장장":
 
-    if role == "공장장":
-
-        status = "공장장 승인 대기"
+        status="공장장 승인 대기"
 
 
-    elif role == "담당자":
+    elif role=="담당자":
 
-        status = "담당자 승인 대기"
+        status="담당자 승인 대기"
 
 
-    elif role == "대표":
+    elif role=="대표":
 
-        status = "대표 승인 대기"
+        status="대표 승인 대기"
 
 
     else:
 
         return "권한 없음"
+
 
 
 
@@ -606,6 +715,80 @@ def approval():
 
 
 
+# ==========================
+# 다음 승인 단계 계산
+# ==========================
+
+def get_next_status(applicant):
+
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    cur.execute("""
+    SELECT factory_approval,
+           manager_approval
+
+    FROM users
+
+    WHERE name=?
+
+    """,
+    (applicant,))
+
+
+    data=cur.fetchone()
+
+
+    conn.close()
+
+
+
+    if not data:
+
+        return "대표 승인 대기"
+
+
+
+    factory=data[0]
+
+    manager=data[1]
+
+
+
+    # 현재 공장장 승인 완료 후
+
+    if factory==1 and manager==1:
+
+        return "담당자 승인 대기"
+
+
+
+    if factory==1 and manager==0:
+
+        return "대표 승인 대기"
+
+
+
+    # 공장장 생략 후 담당자 승인
+
+    if factory==0 and manager==1:
+
+        return "대표 승인 대기"
+
+
+
+    # 모두 생략
+
+    return "최종 승인 완료"
+
+
+
+
+
 
 
 # ==========================
@@ -626,31 +809,57 @@ def approve(id,kind):
 
 
 
-    if role=="공장장":
+    conn=get_db()
 
-        status="담당자 승인 대기"
-
-
-    elif role=="담당자":
-
-        status="대표 승인 대기"
+    cur=conn.cursor()
 
 
-    elif role=="대표":
 
-        status="최종 승인 완료"
+    if kind=="leave":
+
+
+        cur.execute("""
+        SELECT applicant
+
+        FROM leave_request
+
+        WHERE id=?
+
+        """,
+        (id,))
 
 
     else:
 
-        return "권한 없음"
+
+        cur.execute("""
+        SELECT applicant
+
+        FROM purchase_request
+
+        WHERE id=?
+
+        """,
+        (id,))
 
 
 
+    row=cur.fetchone()
 
-    conn=get_db()
 
-    cur=conn.cursor()
+    if not row:
+
+        conn.close()
+
+        return "자료 없음"
+
+
+
+    applicant=row[0]
+
+
+
+    next_status=get_next_status(applicant)
 
 
 
@@ -666,7 +875,7 @@ def approve(id,kind):
 
         """,
         (
-        status,
+        next_status,
         id
         ))
 
@@ -683,7 +892,7 @@ def approve(id,kind):
 
         """,
         (
-        status,
+        next_status,
         id
         ))
 
@@ -696,8 +905,6 @@ def approve(id,kind):
 
 
     return redirect("/approval")
-
-
 
 # ==========================
 # 반려 처리
@@ -719,8 +926,7 @@ def reject(id,kind):
         reason=request.form["reason"]
 
 
-
-        status="반려 : "+reason
+        status="반려 : " + reason
 
 
 
@@ -775,148 +981,296 @@ def reject(id,kind):
 
 
 
-
     return """
 
     <h2 style='text-align:center'>
-
     반려 사유 입력
-
     </h2>
 
-
     <form method='post'
-
     style='text-align:center'>
 
-
     <textarea name='reason'
-
-    style='width:300px;height:100px'>
-
-    </textarea>
-
+    style='width:300px;height:100px'></textarea>
 
     <br><br>
 
-
     <button>
-
     반려 처리
-
     </button>
-
 
     </form>
 
     """
 
+
+
+
 # ==========================
 # 직원 관리
 # ==========================
-@app.route("/user_manage", methods=["GET", "POST"])
+
+@app.route("/user_manage", methods=["GET","POST"])
 def user_manage():
 
-    print("REQUEST METHOD :", request.method)
 
     if "id" not in session:
+
         return redirect("/login")
 
-    if session["role"] != "담당자":
+
+    if session["role"]!="담당자":
+
         return "권한 없음"
 
-    conn = get_db()
-    cur = conn.cursor()
 
-    # 직원 등록
-    if request.method == "POST":
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    if request.method=="POST":
+
 
         cur.execute("""
         INSERT INTO users
         (
-            user_id,
-            password,
-            name,
-            role
+        user_id,
+        password,
+        name,
+        role,
+        factory_approval,
+        manager_approval
         )
-        VALUES (?,?,?,?)
+
+        VALUES(?,?,?,?,?,?)
+
         """,
         (
-            request.form["user_id"],
-            request.form["password"],
-            request.form["name"],
-            request.form["role"]
+
+        request.form["user_id"],
+
+        request.form["password"],
+
+        request.form["name"],
+
+        request.form["role"],
+
+        request.form.get(
+            "factory_approval",
+            "1"
+        ),
+
+        request.form.get(
+            "manager_approval",
+            "1"
+        )
+
         ))
+
+
 
         conn.commit()
 
+
+
     cur.execute("""
     SELECT *
+
     FROM users
+
     ORDER BY id DESC
+
     """)
 
-    users = cur.fetchall()
+
+
+    users=cur.fetchall()
+
+
 
     conn.close()
 
+
+
     return render_template(
+
         "user_manage.html",
+
         users=users
+
     )
+
+
+
+
+
 
 
 # ==========================
 # 직원 수정
 # ==========================
+
 @app.route("/user_edit/<int:id>", methods=["GET","POST"])
 def user_edit(id):
 
+
     if "id" not in session:
+
         return redirect("/login")
 
-    if session["role"] != "담당자":
+
+
+    if session["role"]!="담당자":
+
         return "권한 없음"
 
-    conn = get_db()
-    cur = conn.cursor()
 
-    if request.method == "POST":
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    if request.method=="POST":
+
+
+        user_id=request.form["user_id"].strip()
+
+        password=request.form["password"].strip()
+
+        name=request.form["name"].strip()
+
+        role=request.form["role"].strip()
+
+        factory_approval=request.form["factory_approval"]
+
+        manager_approval=request.form["manager_approval"]
+
+
+
+        cur.execute("""
+        SELECT id
+
+        FROM users
+
+        WHERE user_id=?
+
+        AND id!=?
+
+        """,
+        (
+        user_id,
+        id
+        ))
+
+
+
+        exist=cur.fetchone()
+
+
+
+        if exist:
+
+
+            conn.close()
+
+
+            return """
+            <script>
+            alert('이미 존재하는 아이디입니다.');
+            history.back();
+            </script>
+            """
+
+
 
         cur.execute("""
         UPDATE users
+
         SET
-            password=?,
-            name=?,
-            role=?
+
+        user_id=?,
+
+        password=?,
+
+        name=?,
+
+        role=?,
+
+        factory_approval=?,
+
+        manager_approval=?
+
         WHERE id=?
+
         """,
         (
-            request.form["password"],
-            request.form["name"],
-            request.form["role"],
-            id
+
+        user_id,
+
+        password,
+
+        name,
+
+        role,
+
+        factory_approval,
+
+        manager_approval,
+
+        id
+
         ))
 
+
+
         conn.commit()
+
         conn.close()
+
+
 
         return redirect("/user_manage")
 
+
+
+
+
     cur.execute("""
     SELECT *
-    FROM users
-    WHERE id=?
-    """, (id,))
 
-    user = cur.fetchone()
+    FROM users
+
+    WHERE id=?
+
+    """,
+    (id,))
+
+
+
+    user=cur.fetchone()
+
+
 
     conn.close()
 
+
+
     return render_template(
+
         "user_edit.html",
+
         user=user
+
     )
+
+
+
+
 
 # ==========================
 # 연차 엑셀 다운로드
@@ -926,15 +1280,79 @@ def user_edit(id):
 def export_leave():
 
 
-    # 로그인 확인
-
     if "id" not in session:
 
         return redirect("/login")
 
 
 
-    # 담당자만 가능
+    if session["role"]!="담당자":
+
+        return "권한 없음"
+
+
+
+    conn=get_db()
+
+
+
+    df=pd.read_sql_query(
+        """
+        SELECT *
+
+        FROM leave_request
+
+        ORDER BY id DESC
+
+        """,
+        conn
+    )
+
+
+
+    conn.close()
+
+
+
+    filename = (
+        "연차신청현황_"
+        +
+        datetime.now().strftime("%Y%m%d")
+        +
+        ".xlsx"
+    )
+
+
+
+    df.to_excel(
+
+        filename,
+
+        index=False
+
+    )
+
+
+
+    return send_file(
+
+        filename,
+
+        as_attachment=True
+
+    )
+
+# ==========================
+# 구매 요청 엑셀 다운로드
+# ==========================
+
+@app.route("/export_purchase")
+def export_purchase():
+
+    if "id" not in session:
+
+        return redirect("/login")
+
 
     if session["role"] != "담당자":
 
@@ -945,17 +1363,17 @@ def export_leave():
     conn = get_db()
 
 
-
     df = pd.read_sql_query(
-
         """
         SELECT *
-        FROM leave_request
+
+        FROM purchase_request
+
         ORDER BY id DESC
+
         """,
 
         conn
-
     )
 
 
@@ -963,7 +1381,13 @@ def export_leave():
 
 
 
-    filename = "연차신청현황.xlsx"
+    filename = (
+        "구매요청현황_"
+        +
+        datetime.now().strftime("%Y%m%d")
+        +
+        ".xlsx"
+    )
 
 
 
@@ -986,7 +1410,6 @@ def export_leave():
     )
 
 
-
 # ==========================
 # 로그아웃
 # ==========================
@@ -994,11 +1417,12 @@ def export_leave():
 @app.route("/logout")
 def logout():
 
-
     session.clear()
 
-
     return redirect("/login")
+
+
+
 
 
 # ==========================
@@ -1007,9 +1431,14 @@ def logout():
 
 if __name__=="__main__":
 
+
     init_db()
 
+
     app.run(
+
         host="0.0.0.0",
+
         port=5000
+
     )

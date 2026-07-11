@@ -68,6 +68,27 @@ a{
     text-decoration:none;
 }
 
+
+.approval-box{
+
+    background:#f8fafc;
+
+    padding:10px;
+
+    border-radius:8px;
+
+    margin-bottom:15px;
+
+}
+
+
+.approval-box input{
+
+    width:auto;
+
+}
+
+
 </style>
 
 </head>
@@ -80,6 +101,7 @@ a{
 
 <h2>👥 직원 관리</h2>
 
+
 {% if error %}
 
 <script>
@@ -88,58 +110,261 @@ alert("{{ error }}");
 
 {% endif %}
 
+
+
 <form method="post">
 
-아이디 <input type="text" name="user_id">
 
-비밀번호 <input type="password" name="password">
+아이디
 
-이름 <input type="text" name="name">
+<input type="text" name="user_id">
 
-권한 <select name="role"> <option value="">선택하세요</option> <option value="직원">직원</option> <option value="공장장">공장장</option> <option value="담당자">담당자</option> <option value="대표">대표</option> </select>
 
-<button type="submit">
-직원 등록
-</button>
 
-</form>
+비밀번호
 
-<table>
+<input type="password" name="password">
 
-<tr>
-    <th>아이디</th>
-    <th>이름</th>
-    <th>권한</th>
-    <th>수정</th>
-</tr>
 
-{% for user in users %}
 
-<tr>
-    <td>{{ user[1] }}</td>
-    <td>{{ user[3] }}</td>
-    <td>{{ user[4] }}</td>
-    <td>
-        <a href="/user_edit/{{ user[0] }}">
-            수정
-        </a>
-    </td>
-</tr>
-{% endfor %}
+이름
 
-</table>
+<input type="text" name="name">
+
+
+
+권한
+
+
+<select name="role">
+
+<option value="">
+선택하세요
+</option>
+
+<option value="직원">
+직원
+</option>
+
+<option value="공장장">
+공장장
+</option>
+
+<option value="담당자">
+담당자
+</option>
+
+<option value="대표">
+대표
+</option>
+
+</select>
+
+
+
+<!-- 추가된 부분 -->
+
+<div class="approval-box">
+
+
+공장장 승인
 
 <br>
 
-<a href="/main">
-<button>
-메인으로
+<input type="radio"
+name="factory_approval"
+value="1"
+checked>
+
+필요
+
+
+&nbsp;
+
+
+<input type="radio"
+name="factory_approval"
+value="0">
+
+생략
+
+
+</div>
+
+
+
+<div class="approval-box">
+
+
+담당자 승인
+
+<br>
+
+
+<input type="radio"
+name="manager_approval"
+value="1"
+checked>
+
+필요
+
+
+&nbsp;
+
+
+<input type="radio"
+name="manager_approval"
+value="0">
+
+생략
+
+
+</div>
+
+
+
+<button type="submit">
+
+직원 등록
+
 </button>
+
+
+</form>
+
+
+
+
+<table>
+
+
+<tr>
+
+<th>
+아이디
+</th>
+
+<th>
+이름
+</th>
+
+<th>
+권한
+</th>
+
+<th>
+공장장 승인
+</th>
+
+<th>
+담당자 승인
+</th>
+
+<th>
+수정
+</th>
+
+</tr>
+
+
+
+
+{% for user in users %}
+
+
+<tr>
+
+
+<td>
+{{ user[1] }}
+</td>
+
+
+<td>
+{{ user[3] }}
+</td>
+
+
+<td>
+{{ user[4] }}
+</td>
+
+
+
+<td>
+
+{% if user[5] == 1 %}
+
+필요
+
+{% else %}
+
+생략
+
+{% endif %}
+
+</td>
+
+
+
+<td>
+
+{% if user[6] == 1 %}
+
+필요
+
+{% else %}
+
+생략
+
+{% endif %}
+
+</td>
+
+
+
+<td>
+
+<a href="/user_edit/{{ user[0] }}">
+
+수정
+
 </a>
 
+
+</td>
+
+
+
+</tr>
+
+
+{% endfor %}
+
+
+
+</table>
+
+
+<br>
+
+
+<a href="/main">
+
+<button>
+
+메인으로
+
+</button>
+
+</a>
+
+
+
 </div>
 
 </div>
+
 
 </body>
 </html>
