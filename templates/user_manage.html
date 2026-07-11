@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직원 관리</title>
+
+<style>
+
+body{
+    font-family:"맑은 고딕";
+    background:#f5f7fb;
+    margin:0;
+    padding:30px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+input,
+select{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    margin-bottom:15px;
+    border:1px solid #cccccc;
+    border-radius:8px;
+}
+
+button{
+    background:#9333ea;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+
+th,
+td{
+    border:1px solid #dddddd;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#0f172a;
+    color:white;
+}
+
+a{
+    text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>👥 직원 관리</h2>
+
+{% if error %}
+
+<script>
+alert("{{ error }}");
+</script>
+
+{% endif %}
+
+<form method="post">
+
+아이디 <input type="text" name="user_id">
+
+비밀번호 <input type="password" name="password">
+
+이름 <input type="text" name="name">
+
+권한 <select name="role"> <option value="">선택하세요</option> <option value="직원">직원</option> <option value="공장장">공장장</option> <option value="담당자">담당자</option> <option value="대표">대표</option> </select>
+
+<button type="submit">
+직원 등록
+</button>
+
+</form>
+
+<table>
+
+<tr>
+    <th>아이디</th>
+    <th>이름</th>
+    <th>권한</th>
+    <th>수정</th>
+</tr>
+
+{% for user in users %}
+
+<tr>
+    <td>{{ user[1] }}</td>
+    <td>{{ user[3] }}</td>
+    <td>{{ user[4] }}</td>
+    <td>
+        <a href="/user_edit/{{ user[0] }}">
+            수정
+        </a>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/main">
+<button>
+메인으로
+</button>
+</a>
+
+</div>
+
+</div>
+
+</body>
+</html>

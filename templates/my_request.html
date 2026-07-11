@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+내 신청 현황
+</title>
+
+
+<style>
+
+body{
+
+font-family:"맑은 고딕";
+
+background:#f5f7fb;
+
+text-align:center;
+
+}
+
+
+.box{
+
+width:90%;
+
+max-width:700px;
+
+margin:30px auto;
+
+background:white;
+
+padding:25px;
+
+border-radius:15px;
+
+}
+
+
+.card{
+
+border:1px solid #ddd;
+
+padding:15px;
+
+margin:15px;
+
+border-radius:10px;
+
+}
+
+
+button{
+
+width:200px;
+
+height:45px;
+
+font-size:16px;
+
+}
+
+
+h2{
+
+color:#1e3a8a;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="box">
+
+
+<h1>
+SUNYOUNG 전자결재
+</h1>
+
+
+<h2>
+내 신청 현황
+</h2>
+
+
+
+<h3>
+연차 / 반차 신청
+</h3>
+
+
+
+{% if leave_data|length == 0 %}
+
+<p>
+신청 내역이 없습니다.
+</p>
+
+{% endif %}
+
+
+
+{% for row in leave_data %}
+
+
+<div class="card">
+
+
+<p>
+신청 종류 : {{row[2]}}
+</p>
+
+
+<p>
+사용 날짜 : {{row[3]}}
+</p>
+
+
+<p>
+사유 : {{row[5]}}
+</p>
+
+
+<p>
+상태 :
+
+<strong>
+{{row[6]}}
+</strong>
+
+</p>
+
+
+<p>
+신청일 : {{row[7]}}
+</p>
+
+
+</div>
+
+
+{% endfor %}
+
+
+
+
+<h3>
+구매 요청
+</h3>
+
+
+
+{% if purchase_data|length == 0 %}
+
+<p>
+신청 내역이 없습니다.
+</p>
+
+{% endif %}
+
+
+
+
+{% for row in purchase_data %}
+
+
+<div class="card">
+
+
+<p>
+품명 : {{row[2]}}
+</p>
+
+
+<p>
+수량 : {{row[3]}}
+</p>
+
+
+<p>
+사유 : {{row[4]}}
+</p>
+
+
+<p>
+상태 :
+
+<strong>
+{{row[5]}}
+</strong>
+
+</p>
+
+
+<p>
+신청일 : {{row[6]}}
+</p>
+
+
+</div>
+
+
+{% endfor %}
+
+
+
+
+<br>
+
+
+<a href="/main">
+
+<button>
+
+메인으로
+
+</button>
+
+</a>
+
+
+
+</div>
+
+
+</body>
+
+
+</html>
