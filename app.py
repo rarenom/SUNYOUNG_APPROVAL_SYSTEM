@@ -5,8 +5,9 @@ import pandas as pd
 
 
 app = Flask(__name__)
-
 app.secret_key = "SUNYOUNG_SECRET_KEY"
+
+init_db()
 
 
 # ==========================
@@ -1429,16 +1430,10 @@ def logout():
 # 실행
 # ==========================
 
+init_db()
+
 if __name__=="__main__":
-
-
-    init_db()
-
-
     app.run(
-
         host="0.0.0.0",
-
         port=5000
-
     )
