@@ -705,11 +705,8 @@ def approval():
 
 def get_next_status(applicant):
 
-
     conn=get_db()
-
     cur=conn.cursor()
-
 
 
     cur.execute("""
@@ -719,13 +716,11 @@ def get_next_status(applicant):
     FROM users
 
     WHERE name=?
-
     """,
     (applicant,))
 
 
     data=cur.fetchone()
-
 
     conn.close()
 
@@ -733,7 +728,7 @@ def get_next_status(applicant):
 
     if not data:
 
-        return "대표 승인 대기"
+        return "최종 승인 완료"
 
 
 
@@ -743,35 +738,23 @@ def get_next_status(applicant):
 
 
 
-    # 현재 공장장 승인 완료 후
-
-    if factory==1 and manager==1:
+    # 공장장 승인 전
+    if factory==1:
 
         return "담당자 승인 대기"
 
 
 
-    if factory==1 and manager==0:
+    # 담당자 승인 전
+    if manager==1:
 
         return "대표 승인 대기"
 
 
 
-    # 공장장 생략 후 담당자 승인
-
-    if factory==0 and manager==1:
-
-        return "대표 승인 대기"
-
-
-
-    # 모두 생략
+    # 모두 완료
 
     return "최종 승인 완료"
-
-
-
-
 
 
 
