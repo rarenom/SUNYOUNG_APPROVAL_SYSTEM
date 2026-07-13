@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 
 <html>
@@ -204,6 +205,10 @@ SUNYOUNG 결재 대기함
 
 <th>상태</th>
 
+<th>승인 경과</th>
+
+<th>반려 내용</th>
+
 <th>처리</th>
 
 </tr>
@@ -252,7 +257,24 @@ SUNYOUNG 결재 대기함
 </td>
 
 
+<td style="white-space:pre-line;">
+
+{{row[8] or ""}}
+
+</td>
+
+
+<td style="white-space:pre-line;">
+
+{{row[9] or ""}}
+
+</td>
+
+
 <td>
+
+
+{% if row[6] != "최종 승인 완료" and not row[6].startswith("반려") %}
 
 
 <a href="/approve/{{row[0]}}/leave">
@@ -276,6 +298,13 @@ SUNYOUNG 결재 대기함
 </button>
 
 </a>
+
+
+{% else %}
+
+처리 완료
+
+{% endif %}
 
 
 </td>
@@ -314,6 +343,8 @@ SUNYOUNG 결재 대기함
 
 
 
+
+
 <div class="box">
 
 
@@ -343,6 +374,10 @@ SUNYOUNG 결재 대기함
 <th>사유</th>
 
 <th>상태</th>
+
+<th>승인 경과</th>
+
+<th>반려 내용</th>
 
 <th>처리</th>
 
@@ -392,8 +427,25 @@ SUNYOUNG 결재 대기함
 </td>
 
 
+<td style="white-space:pre-line;">
+
+{{row[7] or ""}}
+
+</td>
+
+
+<td style="white-space:pre-line;">
+
+{{row[8] or ""}}
+
+</td>
+
+
 
 <td>
+
+
+{% if row[5] != "최종 승인 완료" and not row[5].startswith("반려") %}
 
 
 
@@ -424,6 +476,13 @@ SUNYOUNG 결재 대기함
 
 
 </a>
+
+
+{% else %}
+
+처리 완료
+
+{% endif %}
 
 
 
@@ -464,6 +523,8 @@ SUNYOUNG 결재 대기함
 
 
 
+
+
 <a href="/main">
 
 
@@ -482,3 +543,4 @@ SUNYOUNG 결재 대기함
 
 
 </html>
+```
