@@ -5,7 +5,6 @@ import pandas as pd
 
 
 app = Flask(__name__)
-
 app.secret_key = "SUNYOUNG_SECRET_KEY"
 
 
@@ -15,10 +14,7 @@ app.secret_key = "SUNYOUNG_SECRET_KEY"
 # ==========================
 
 def get_db():
-
     return sqlite3.connect("database.db")
-
-
 
 
 
@@ -29,14 +25,10 @@ def get_db():
 def init_db():
 
     conn = get_db()
-
     cur = conn.cursor()
 
 
-
-    # ==========================
     # 사용자
-    # ==========================
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users(
@@ -60,11 +52,7 @@ def init_db():
 
 
 
-
-
-    # ==========================
     # 연차 신청
-    # ==========================
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS leave_request(
@@ -90,11 +78,7 @@ def init_db():
 
 
 
-
-
-    # ==========================
     # 구매 신청
-    # ==========================
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS purchase_request(
@@ -118,84 +102,30 @@ def init_db():
 
 
 
-
-
-    # ==========================
     # 기존 DB 컬럼 추가
-    # ==========================
-
 
     try:
-
         cur.execute("""
         ALTER TABLE users
         ADD COLUMN factory_approval INTEGER DEFAULT 1
         """)
-
     except:
-
         pass
 
 
-
-
     try:
-
         cur.execute("""
         ALTER TABLE users
         ADD COLUMN manager_approval INTEGER DEFAULT 1
         """)
-
     except:
-
         pass
 
 
 
-
-
-    # 연차 승인 이력
-
-    try:
-
-        cur.execute("""
-        ALTER TABLE leave_request
-        ADD COLUMN approval_history TEXT
-        """)
-
-    except:
-
-        pass
-
-
-
-
-
-    # 구매 승인 이력
-
-    try:
-
-        cur.execute("""
-        ALTER TABLE purchase_request
-        ADD COLUMN approval_history TEXT
-        """)
-
-    except:
-
-        pass
-
-
-
-
-
-
-    # ==========================
     # 기본 사용자
-    # ==========================
 
-
-    default_users=[
-
+    default_users = [
 
         (
             "employee01",
@@ -206,7 +136,6 @@ def init_db():
             1
         ),
 
-
         (
             "factory01",
             "1234",
@@ -215,7 +144,6 @@ def init_db():
             1,
             1
         ),
-
 
         (
             "manager01",
@@ -226,7 +154,6 @@ def init_db():
             1
         ),
 
-
         (
             "ceo01",
             "2017",
@@ -236,48 +163,28 @@ def init_db():
             1
         )
 
-
     ]
 
-
-
-
-
     for user in default_users:
-
-
         cur.execute("""
         INSERT OR IGNORE INTO users
         (
-        user_id,
-        password,
-        name,
-        role,
-        factory_approval,
-        manager_approval
+            user_id,
+            password,
+            name,
+            role,
+            factory_approval,
+            manager_approval
         )
-
-        VALUES(?,?,?,?,?,?)
-
-        """,
-        user)
-
-
-
-
+        VALUES (?,?,?,?,?,?)
+        """, user)
 
     conn.commit()
-
     conn.close()
-
-
-
-
 
 # ==========================
 # 시작
 # ==========================
-
 
 @app.route("/")
 def index():
@@ -287,74 +194,74 @@ def index():
 
 
 
-
-
-
 # ==========================
 # 로그인
 # ==========================
 
-
 @app.route("/login", methods=["GET","POST"])
 def login():
 
+    if request.method == "POST":
 
-    if request.method=="POST":
-
-
-        user_id=request.form["user_id"].strip()
-
-        password=request.form["password"].strip()
+        user_id = request.form["user_id"].strip()
+        password = request.form["password"].strip()
 
 
+        conn = get_db()
+        cur = conn.cursor()
 
-        conn=get_db()
-
-        cur=conn.cursor()
-
-
+        # DB 전체 사용자 확인
+        cur.execute("SELECT * FROM users")
+        print("전체 사용자 :", cur.fetchall())
 
         cur.execute("""
         SELECT *
-
         FROM users
-
         WHERE user_id=?
-
         AND password=?
-
-        """,
-        (
-        user_id,
-        password
+        """, (
+            user_id,
+            password
         ))
 
 
+        user = cur.fetchone()
 
-        user=cur.fetchone()
 
+        # Render 로그 확인용
+        print("====================")
+        print("로그인 입력 ID :", user_id)
+        print("로그인 입력 PW :", password)
+        print("DB 검색 결과 :", user)
+        print("====================")
 
 
         conn.close()
 
 
 
-
-
         if user:
 
 
-            session["id"]=user[0]
+            session["id"] = user[0]
 
-            session["name"]=user[3]
+            session["name"] = user[3]
 
-            session["role"]=user[4]
+            session["role"] = user[4]
 
+
+            print("로그인 성공")
+            print("이름 :", session["name"])
+            print("권한 :", session["role"])
 
 
             return redirect("/main")
 
 
+
+        else:
+
+            print("로그인 실패")
 
 
 
@@ -366,20 +273,16 @@ def login():
 
 
 
-
 # ==========================
 # 메인
 # ==========================
 
-
 @app.route("/main")
 def main():
-
 
     if "id" not in session:
 
         return redirect("/login")
-
 
 
     return render_template(
@@ -396,28 +299,20 @@ def main():
 
 
 
-
 # ==========================
-# 첫 승인 상태 확인
+# 승인 단계 확인 함수
 # ==========================
-
 
 def get_first_status(name):
-
 
     conn=get_db()
 
     cur=conn.cursor()
 
 
-
     cur.execute("""
-    SELECT
-
-    factory_approval,
-
-    manager_approval
-
+    SELECT factory_approval,
+           manager_approval
 
     FROM users
 
@@ -427,13 +322,10 @@ def get_first_status(name):
     (name,))
 
 
-
     data=cur.fetchone()
 
 
     conn.close()
-
-
 
 
 
@@ -443,14 +335,19 @@ def get_first_status(name):
 
 
 
+    factory=data[0]
 
-    if data[0]==1:
+    manager=data[1]
+
+
+
+    if factory==1:
 
         return "공장장 승인 대기"
 
 
 
-    elif data[1]==1:
+    elif manager==1:
 
         return "담당자 승인 대기"
 
@@ -463,35 +360,6 @@ def get_first_status(name):
 
 
 
-
-
-# ==========================
-# 다음 승인 상태
-# ==========================
-
-
-def get_next_status_by_role(role):
-
-
-    if role=="공장장":
-
-        return "담당자 승인 대기"
-
-
-
-    elif role=="담당자":
-
-        return "대표 승인 대기"
-
-
-
-    elif role=="대표":
-
-        return "최종 승인 완료"
-
-
-
-    return "최종 승인 완료"
 
 # ==========================
 # 연차 신청
@@ -545,18 +413,13 @@ def leave():
 
         request.form["leave_date"],
 
-        request.form.get(
-            "half_type",
-            ""
-        ),
+        request.form.get("half_type",""),
 
         request.form["reason"],
 
         status,
 
-        datetime.now().strftime(
-            "%Y-%m-%d"
-        )
+        datetime.now().strftime("%Y-%m-%d")
 
         ))
 
@@ -572,7 +435,6 @@ def leave():
 
 
 
-
     return render_template(
 
         "leave.html",
@@ -582,17 +444,9 @@ def leave():
         role=session["role"]
 
     )
-
-
-
-
-
-
-
 # ==========================
 # 구매 신청
 # ==========================
-
 
 @app.route("/purchase", methods=["GET","POST"])
 def purchase():
@@ -645,9 +499,7 @@ def purchase():
 
         status,
 
-        datetime.now().strftime(
-            "%Y-%m-%d"
-        )
+        datetime.now().strftime("%Y-%m-%d")
 
         ))
 
@@ -663,7 +515,6 @@ def purchase():
 
 
 
-
     return render_template(
 
         "purchase.html",
@@ -678,13 +529,9 @@ def purchase():
 
 
 
-
-
-
 # ==========================
 # 내 신청 현황
 # ==========================
-
 
 @app.route("/my_request")
 def my_request():
@@ -717,9 +564,7 @@ def my_request():
     ))
 
 
-
     leave_data=cur.fetchall()
-
 
 
 
@@ -736,7 +581,6 @@ def my_request():
     (
     session["name"],
     ))
-
 
 
     purchase_data=cur.fetchall()
@@ -761,14 +605,9 @@ def my_request():
 
 
 
-
-
-
-
 # ==========================
 # 결재 대기함
 # ==========================
-
 
 @app.route("/approval")
 def approval():
@@ -784,11 +623,9 @@ def approval():
 
 
 
-
     if role=="공장장":
 
         status="공장장 승인 대기"
-
 
 
     elif role=="담당자":
@@ -796,17 +633,14 @@ def approval():
         status="담당자 승인 대기"
 
 
-
     elif role=="대표":
 
         status="대표 승인 대기"
 
 
-
     else:
 
         return "권한 없음"
-
 
 
 
@@ -824,17 +658,11 @@ def approval():
 
     WHERE status=?
 
-    ORDER BY id DESC
-
     """,
-    (
-    status,
-    ))
-
+    (status,))
 
 
     leave_data=cur.fetchall()
-
 
 
 
@@ -845,13 +673,8 @@ def approval():
 
     WHERE status=?
 
-    ORDER BY id DESC
-
     """,
-    (
-    status,
-    ))
-
+    (status,))
 
 
     purchase_data=cur.fetchall()
@@ -859,7 +682,6 @@ def approval():
 
 
     conn.close()
-
 
 
 
@@ -873,6 +695,7 @@ def approval():
 
     )
 
+
 # ==========================
 # 다음 승인 단계 계산
 # ==========================
@@ -880,18 +703,21 @@ def approval():
 def get_next_status_by_role(role):
 
 
+    # 공장장 승인 후
     if role=="공장장":
 
         return "담당자 승인 대기"
 
 
 
+    # 담당자 승인 후
     elif role=="담당자":
 
         return "대표 승인 대기"
 
 
 
+    # 대표 승인 후
     elif role=="대표":
 
         return "최종 승인 완료"
@@ -903,12 +729,9 @@ def get_next_status_by_role(role):
 
 
 
-
-
 # ==========================
 # 승인 처리
 # ==========================
-
 
 @app.route("/approve/<int:id>/<kind>")
 def approve(id,kind):
@@ -922,8 +745,6 @@ def approve(id,kind):
 
     role=session["role"]
 
-    name=session["name"]
-
 
 
     conn=get_db()
@@ -932,47 +753,11 @@ def approve(id,kind):
 
 
 
-    now=datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-
-
-
-    # 다음 상태
-
-    next_status=get_next_status_by_role(
-        role
-    )
-
-
-
-    # 승인 기록
-
-    history_text = (
-
-        role
-        + " : "
-        + name
-        + " 승인 "
-        + now
-
-    )
-
-
-
-
-
-    # ==========================
-    # 연차 승인
-    # ==========================
-
-
     if kind=="leave":
 
 
-
         cur.execute("""
-        SELECT approval_history
+        SELECT applicant
 
         FROM leave_request
 
@@ -982,83 +767,11 @@ def approve(id,kind):
         (id,))
 
 
-
-        row=cur.fetchone()
-
-
-
-        if not row:
-
-            conn.close()
-
-            return "자료 없음"
-
-
-
-
-        old_history=row[0]
-
-
-
-        if old_history:
-
-
-            new_history = (
-
-                old_history
-                + "\n"
-                + history_text
-
-            )
-
-
-        else:
-
-
-            new_history = history_text
-
-
-
-
-
-        cur.execute("""
-        UPDATE leave_request
-
-        SET
-
-        status=?,
-
-        approval_history=?
-
-        WHERE id=?
-
-        """,
-        (
-
-        next_status,
-
-        new_history,
-
-        id
-
-        ))
-
-
-
-
-
-
-    # ==========================
-    # 구매 승인
-    # ==========================
-
-
     else:
 
 
-
         cur.execute("""
-        SELECT approval_history
+        SELECT applicant
 
         FROM purchase_request
 
@@ -1069,70 +782,57 @@ def approve(id,kind):
 
 
 
-        row=cur.fetchone()
+    row=cur.fetchone()
+
+
+    if not row:
+
+        conn.close()
+
+        return "자료 없음"
 
 
 
-        if not row:
-
-            conn.close()
-
-            return "자료 없음"
+    applicant=row[0]
 
 
 
-
-
-        old_history=row[0]
-
-
-
-        if old_history:
-
-
-            new_history=(
-
-                old_history
-                + "\n"
-                + history_text
-
-            )
-
-
-        else:
-
-
-            new_history=history_text
+    next_status=get_next_status_by_role(role)
 
 
 
-
+    if kind=="leave":
 
 
         cur.execute("""
-        UPDATE purchase_request
+        UPDATE leave_request
 
-        SET
-
-        status=?,
-
-        approval_history=?
+        SET status=?
 
         WHERE id=?
 
         """,
         (
-
         next_status,
-
-        new_history,
-
         id
-
         ))
 
 
+    else:
 
+
+        cur.execute("""
+        UPDATE purchase_request
+
+        SET status=?
+
+        WHERE id=?
+
+        """,
+        (
+        next_status,
+        id
+        ))
 
 
 
@@ -1147,7 +847,6 @@ def approve(id,kind):
 # ==========================
 # 반려 처리
 # ==========================
-
 
 @app.route("/reject/<int:id>/<kind>", methods=["GET","POST"])
 def reject(id,kind):
@@ -1162,36 +861,10 @@ def reject(id,kind):
     if request.method=="POST":
 
 
-
         reason=request.form["reason"]
 
 
-
-        now=datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-
-
-        history_text=(
-
-            session["role"]
-
-            + " : "
-
-            + session["name"]
-
-            + " 반려 "
-
-            + now
-
-            + "\n사유 : "
-
-            + reason
-
-        )
-
-
+        status="반려 : " + reason
 
 
 
@@ -1201,127 +874,38 @@ def reject(id,kind):
 
 
 
-
         if kind=="leave":
-
-
-
-            cur.execute("""
-            SELECT approval_history
-
-            FROM leave_request
-
-            WHERE id=?
-
-            """,
-            (id,))
-
-
-
-            old=cur.fetchone()[0]
-
-
-
-            if old:
-
-
-                history = old + "\n" + history_text
-
-
-            else:
-
-
-                history = history_text
-
-
-
 
 
             cur.execute("""
             UPDATE leave_request
 
-            SET
-
-            status=?,
-
-            approval_history=?
+            SET status=?
 
             WHERE id=?
 
             """,
             (
-
-            "반려",
-
-            history,
-
+            status,
             id
-
             ))
-
-
-
-
 
 
         else:
 
 
-
-            cur.execute("""
-            SELECT approval_history
-
-            FROM purchase_request
-
-            WHERE id=?
-
-            """,
-            (id,))
-
-
-
-            old=cur.fetchone()[0]
-
-
-
-            if old:
-
-
-                history = old + "\n" + history_text
-
-
-            else:
-
-
-                history = history_text
-
-
-
-
-
             cur.execute("""
             UPDATE purchase_request
 
-            SET
-
-            status=?,
-
-            approval_history=?
+            SET status=?
 
             WHERE id=?
 
             """,
             (
-
-            "반려",
-
-            history,
-
+            status,
             id
-
             ))
-
-
 
 
 
@@ -1335,1130 +919,36 @@ def reject(id,kind):
 
 
 
-
-
-
     return """
 
     <h2 style='text-align:center'>
-
     반려 사유 입력
-
     </h2>
 
-
     <form method='post'
-
     style='text-align:center'>
 
-
-    <textarea
-
-    name='reason'
-
-    style='width:300px;height:120px'
-
-    required></textarea>
-
-
+    <textarea name='reason'
+    style='width:300px;height:100px'></textarea>
 
     <br><br>
 
-
     <button>
-
     반려 처리
-
     </button>
-
 
     </form>
 
     """
 
 
-# ==================================
-# 메인
-# ==================================
 
-@app.route("/main")
-def main():
 
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-    return render_template(
-
-        "main.html",
-
-        name=session["name"],
-
-        role=session["role"]
-
-    )
-
-
-
-
-
-
-
-# ==================================
-# 최초 승인 상태 확인
-# ==================================
-
-def get_first_status(name):
-
-
-    conn = get_db()
-
-    cur = conn.cursor()
-
-
-
-    cur.execute("""
-    SELECT
-
-    factory_approval,
-
-    manager_approval
-
-
-    FROM users
-
-    WHERE name=?
-
-    """,
-    (name,))
-
-
-
-    data = cur.fetchone()
-
-
-
-    conn.close()
-
-
-
-
-    if not data:
-
-        return "공장장 승인 대기"
-
-
-
-    factory = data[0]
-
-    manager = data[1]
-
-
-
-    if factory == 1:
-
-        return "공장장 승인 대기"
-
-
-
-    elif manager == 1:
-
-        return "담당자 승인 대기"
-
-
-
-    else:
-
-        return "대표 승인 대기"
-
-
-
-
-
-
-
-# ==================================
-# 다음 승인 상태
-# ==================================
-
-def get_next_status_by_role(role):
-
-
-    if role=="공장장":
-
-        return "담당자 승인 대기"
-
-
-
-    elif role=="담당자":
-
-        return "대표 승인 대기"
-
-
-
-    elif role=="대표":
-
-        return "최종 승인 완료"
-
-
-
-    return "최종 승인 완료"
-
-
-
-
-
-
-
-
-# ==================================
-# 연차 신청
-# ==================================
-
-@app.route(
-    "/leave",
-    methods=["GET","POST"]
-)
-def leave():
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-
-    if request.method=="POST":
-
-
-
-        conn=get_db()
-
-        cur=conn.cursor()
-
-
-
-        status = get_first_status(
-            session["name"]
-        )
-
-
-
-
-        cur.execute("""
-        INSERT INTO leave_request
-        (
-            applicant,
-            leave_type,
-            leave_date,
-            half_type,
-            reason,
-            status,
-            reg_date
-        )
-
-        VALUES(?,?,?,?,?,?,?)
-
-        """,
-        (
-
-            session["name"],
-
-            request.form["leave_type"],
-
-            request.form["leave_date"],
-
-            request.form.get(
-                "half_type",
-                ""
-            ),
-
-            request.form["reason"],
-
-            status,
-
-            datetime.now().strftime(
-                "%Y-%m-%d"
-            )
-
-        ))
-
-
-
-        conn.commit()
-
-        conn.close()
-
-
-
-        return redirect(
-            "/my_request"
-        )
-
-
-
-
-
-    return render_template(
-
-        "leave.html",
-
-        name=session["name"],
-
-        role=session["role"]
-
-    )
-
-
-
-
-
-
-
-
-
-
-# ==================================
-# 구매 신청
-# ==================================
-
-@app.route(
-    "/purchase",
-    methods=["GET","POST"]
-)
-def purchase():
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-
-    if request.method=="POST":
-
-
-
-        conn=get_db()
-
-        cur=conn.cursor()
-
-
-
-        status = get_first_status(
-            session["name"]
-        )
-
-
-
-
-        cur.execute("""
-        INSERT INTO purchase_request
-        (
-            applicant,
-            item,
-            quantity,
-            reason,
-            status,
-            reg_date
-        )
-
-        VALUES(?,?,?,?,?,?)
-
-        """,
-        (
-
-            session["name"],
-
-            request.form["item"],
-
-            request.form["quantity"],
-
-            request.form["reason"],
-
-            status,
-
-            datetime.now().strftime(
-                "%Y-%m-%d"
-            )
-
-        ))
-
-
-
-        conn.commit()
-
-        conn.close()
-
-
-
-        return redirect(
-            "/my_request"
-        )
-
-
-
-
-
-
-    return render_template(
-
-        "purchase.html",
-
-        name=session["name"],
-
-        role=session["role"]
-
-    )
-
-
-
-
-
-
-
-
-
-
-# ==================================
-# 내 신청 현황
-# ==================================
-
-@app.route("/my_request")
-def my_request():
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-    conn=get_db()
-
-    cur=conn.cursor()
-
-
-
-    # 연차
-
-    cur.execute("""
-    SELECT *
-
-    FROM leave_request
-
-    WHERE applicant=?
-
-    ORDER BY id DESC
-
-    """,
-    (
-        session["name"],
-    ))
-
-
-    leave_data = cur.fetchall()
-
-
-
-
-
-    # 구매
-
-    cur.execute("""
-    SELECT *
-
-    FROM purchase_request
-
-    WHERE applicant=?
-
-    ORDER BY id DESC
-
-    """,
-    (
-        session["name"],
-    ))
-
-
-
-    purchase_data = cur.fetchall()
-
-
-
-    conn.close()
-
-
-
-
-
-    return render_template(
-
-        "my_request.html",
-
-        leave_data=leave_data,
-
-        purchase_data=purchase_data
-
-    )
-
-
-# ==================================
-# 결재 대기함
-# ==================================
-
-@app.route("/approval")
-def approval():
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-    role = session["role"]
-
-
-
-
-    if role == "공장장":
-
-        status = "공장장 승인 대기"
-
-
-
-    elif role == "담당자":
-
-        status = "담당자 승인 대기"
-
-
-
-    elif role == "대표":
-
-        status = "대표 승인 대기"
-
-
-
-    else:
-
-        return "권한 없음"
-
-
-
-
-
-    conn = get_db()
-
-    cur = conn.cursor()
-
-
-
-    # 연차
-
-    cur.execute("""
-    SELECT *
-
-    FROM leave_request
-
-    WHERE status=?
-
-    ORDER BY id DESC
-
-    """,
-    (
-        status,
-    ))
-
-
-
-    leave_data = cur.fetchall()
-
-
-
-
-
-    # 구매
-
-    cur.execute("""
-    SELECT *
-
-    FROM purchase_request
-
-    WHERE status=?
-
-    ORDER BY id DESC
-
-    """,
-    (
-        status,
-    ))
-
-
-
-    purchase_data = cur.fetchall()
-
-
-
-    conn.close()
-
-
-
-
-
-    return render_template(
-
-        "approval.html",
-
-        leave_data=leave_data,
-
-        purchase_data=purchase_data
-
-    )
-
-
-
-
-
-
-
-
-
-
-# ==================================
-# 승인 처리
-# ==================================
-
-@app.route(
-    "/approve/<int:id>/<kind>"
-)
-def approve(id,kind):
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-    role = session["role"]
-
-    name = session["name"]
-
-
-
-    now = datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-
-
-
-    history_text = (
-
-        role
-        +
-        " : "
-        +
-        name
-        +
-        " 승인 "
-        +
-        now
-
-    )
-
-
-
-    next_status = get_next_status_by_role(
-        role
-    )
-
-
-
-    conn = get_db()
-
-    cur = conn.cursor()
-
-
-
-
-
-    # ==========================
-    # 연차 승인
-    # ==========================
-
-    if kind=="leave":
-
-
-
-        cur.execute("""
-        SELECT approval_history
-
-        FROM leave_request
-
-        WHERE id=?
-
-        """,
-        (
-            id,
-        ))
-
-
-
-        row = cur.fetchone()
-
-
-
-        if not row:
-
-            conn.close()
-
-            return "자료 없음"
-
-
-
-
-        old_history = row[0]
-
-
-
-        if old_history:
-
-            new_history = (
-                old_history
-                +
-                "\n"
-                +
-                history_text
-            )
-
-        else:
-
-            new_history = history_text
-
-
-
-
-
-        cur.execute("""
-        UPDATE leave_request
-
-        SET
-
-        status=?,
-
-        approval_history=?
-
-        WHERE id=?
-
-        """,
-        (
-
-            next_status,
-
-            new_history,
-
-            id
-
-        ))
-
-
-
-
-
-
-
-    # ==========================
-    # 구매 승인
-    # ==========================
-
-    else:
-
-
-
-        cur.execute("""
-        SELECT approval_history
-
-        FROM purchase_request
-
-        WHERE id=?
-
-        """,
-        (
-            id,
-        ))
-
-
-
-        row = cur.fetchone()
-
-
-
-        if not row:
-
-            conn.close()
-
-            return "자료 없음"
-
-
-
-
-
-        old_history=row[0]
-
-
-
-
-        if old_history:
-
-            new_history = (
-                old_history
-                +
-                "\n"
-                +
-                history_text
-            )
-
-
-        else:
-
-            new_history = history_text
-
-
-
-
-
-
-        cur.execute("""
-        UPDATE purchase_request
-
-        SET
-
-        status=?,
-
-        approval_history=?
-
-        WHERE id=?
-
-        """,
-        (
-
-            next_status,
-
-            new_history,
-
-            id
-
-        ))
-
-
-
-
-
-    conn.commit()
-
-    conn.close()
-
-
-
-    return redirect("/approval")
-
-
-
-
-
-
-
-
-
-# ==================================
-# 반려 처리
-# ==================================
-
-@app.route(
-    "/reject/<int:id>/<kind>",
-    methods=["GET","POST"]
-)
-def reject(id,kind):
-
-
-    if "id" not in session:
-
-        return redirect("/login")
-
-
-
-
-    if request.method=="POST":
-
-
-
-        reason = request.form["reason"]
-
-
-
-        now=datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-
-
-        history_text=(
-
-            session["role"]
-
-            +
-            " : "
-
-            +
-            session["name"]
-
-            +
-            " 반려 "
-
-            +
-            now
-
-            +
-            "\n사유 : "
-
-            +
-            reason
-
-        )
-
-
-
-        conn=get_db()
-
-        cur=conn.cursor()
-
-
-
-
-
-
-        if kind=="leave":
-
-
-
-            cur.execute("""
-            SELECT approval_history
-
-            FROM leave_request
-
-            WHERE id=?
-
-            """,
-            (
-                id,
-            ))
-
-
-
-            data=cur.fetchone()
-
-
-
-            old_history = ""
-
-            if data:
-
-                old_history=data[0]
-
-
-
-
-            if old_history:
-
-                history = (
-                    old_history
-                    +
-                    "\n"
-                    +
-                    history_text
-                )
-
-            else:
-
-                history=history_text
-
-
-
-
-
-            cur.execute("""
-            UPDATE leave_request
-
-            SET
-
-            status=?,
-
-            approval_history=?
-
-            WHERE id=?
-
-            """,
-            (
-
-                "반려",
-
-                history,
-
-                id
-
-            ))
-
-
-
-
-
-
-
-        else:
-
-
-
-            cur.execute("""
-            SELECT approval_history
-
-            FROM purchase_request
-
-            WHERE id=?
-
-            """,
-            (
-                id,
-            ))
-
-
-
-            data=cur.fetchone()
-
-
-
-            old_history=""
-
-
-
-            if data:
-
-                old_history=data[0]
-
-
-
-
-
-            if old_history:
-
-                history = (
-                    old_history
-                    +
-                    "\n"
-                    +
-                    history_text
-                )
-
-            else:
-
-                history=history_text
-
-
-
-
-
-            cur.execute("""
-            UPDATE purchase_request
-
-            SET
-
-            status=?,
-
-            approval_history=?
-
-            WHERE id=?
-
-            """,
-            (
-
-                "반려",
-
-                history,
-
-                id
-
-            ))
-
-
-
-
-
-
-        conn.commit()
-
-        conn.close()
-
-
-
-        return redirect("/approval")
-
-
-
-
-
-
-
-    return """
-
-    <h2 style='text-align:center'>
-
-    반려 사유 입력
-
-    </h2>
-
-
-    <form method='post'
-
-    style='text-align:center'>
-
-
-    <textarea
-
-    name='reason'
-
-    style='width:300px;height:120px'
-
-    required></textarea>
-
-
-
-    <br><br>
-
-
-    <button>
-
-    반려 처리
-
-    </button>
-
-
-    </form>
-
-    """
-
-
-# ==================================
+# ==========================
 # 직원 관리
-# ==================================
+# ==========================
 
-@app.route(
-    "/user_manage",
-    methods=["GET","POST"]
-)
+@app.route("/user_manage", methods=["GET","POST"])
 def user_manage():
 
 
@@ -2467,11 +957,9 @@ def user_manage():
         return redirect("/login")
 
 
-
-    if session["role"] != "담당자":
+    if session["role"]!="담당자":
 
         return "권한 없음"
-
 
 
 
@@ -2481,65 +969,18 @@ def user_manage():
 
 
 
-
-
     if request.method=="POST":
-
-
-
-        user_id=request.form["user_id"].strip()
-
-
-
-        # 아이디 중복 확인
-
-        cur.execute("""
-        SELECT id
-
-        FROM users
-
-        WHERE user_id=?
-
-        """,
-        (
-            user_id,
-        ))
-
-
-
-        exist=cur.fetchone()
-
-
-
-        if exist:
-
-            conn.close()
-
-            return """
-
-            <script>
-
-            alert('이미 존재하는 아이디입니다.');
-
-            history.back();
-
-            </script>
-
-            """
-
-
-
 
 
         cur.execute("""
         INSERT INTO users
         (
-            user_id,
-            password,
-            name,
-            role,
-            factory_approval,
-            manager_approval
+        user_id,
+        password,
+        name,
+        role,
+        factory_approval,
+        manager_approval
         )
 
         VALUES(?,?,?,?,?,?)
@@ -2547,32 +988,29 @@ def user_manage():
         """,
         (
 
-            user_id,
+        request.form["user_id"],
 
-            request.form["password"],
+        request.form["password"],
 
-            request.form["name"],
+        request.form["name"],
 
-            request.form["role"],
+        request.form["role"],
 
-            request.form.get(
-                "factory_approval",
-                "1"
-            ),
+        request.form.get(
+            "factory_approval",
+            "1"
+        ),
 
-            request.form.get(
-                "manager_approval",
-                "1"
-            )
+        request.form.get(
+            "manager_approval",
+            "1"
+        )
 
         ))
 
 
 
         conn.commit()
-
-
-
 
 
 
@@ -2595,8 +1033,6 @@ def user_manage():
 
 
 
-
-
     return render_template(
 
         "user_manage.html",
@@ -2611,16 +1047,11 @@ def user_manage():
 
 
 
-
-
-# ==================================
+# ==========================
 # 직원 수정
-# ==================================
+# ==========================
 
-@app.route(
-    "/user_edit/<int:id>",
-    methods=["GET","POST"]
-)
+@app.route("/user_edit/<int:id>", methods=["GET","POST"])
 def user_edit(id):
 
 
@@ -2630,11 +1061,9 @@ def user_edit(id):
 
 
 
-
     if session["role"]!="담당자":
 
         return "권한 없음"
-
 
 
 
@@ -2644,10 +1073,7 @@ def user_edit(id):
 
 
 
-
-
     if request.method=="POST":
-
 
 
         user_id=request.form["user_id"].strip()
@@ -2658,25 +1084,11 @@ def user_edit(id):
 
         role=request.form["role"].strip()
 
+        factory_approval=request.form["factory_approval"]
+
+        manager_approval=request.form["manager_approval"]
 
 
-        factory_approval=request.form.get(
-            "factory_approval",
-            "1"
-        )
-
-
-        manager_approval=request.form.get(
-            "manager_approval",
-            "1"
-        )
-
-
-
-
-
-
-        # 수정 대상 제외 아이디 중복 체크
 
         cur.execute("""
         SELECT id
@@ -2689,17 +1101,13 @@ def user_edit(id):
 
         """,
         (
-
-            user_id,
-
-            id
-
+        user_id,
+        id
         ))
 
 
 
         exist=cur.fetchone()
-
 
 
 
@@ -2710,20 +1118,11 @@ def user_edit(id):
 
 
             return """
-
             <script>
-
             alert('이미 존재하는 아이디입니다.');
-
             history.back();
-
             </script>
-
             """
-
-
-
-
 
 
 
@@ -2744,29 +1143,26 @@ def user_edit(id):
 
         manager_approval=?
 
-
         WHERE id=?
 
         """,
         (
 
-            user_id,
+        user_id,
 
-            password,
+        password,
 
-            name,
+        name,
 
-            role,
+        role,
 
-            factory_approval,
+        factory_approval,
 
-            manager_approval,
+        manager_approval,
 
-            id
+        id
 
         ))
-
-
 
 
 
@@ -2776,11 +1172,7 @@ def user_edit(id):
 
 
 
-        return redirect(
-            "/user_manage"
-        )
-
-
+        return redirect("/user_manage")
 
 
 
@@ -2794,9 +1186,7 @@ def user_edit(id):
     WHERE id=?
 
     """,
-    (
-        id,
-    ))
+    (id,))
 
 
 
@@ -2820,13 +1210,9 @@ def user_edit(id):
 
 
 
-
-
-
-
-# ==================================
+# ==========================
 # 연차 엑셀 다운로드
-# ==================================
+# ==========================
 
 @app.route("/export_leave")
 def export_leave():
@@ -2838,11 +1224,9 @@ def export_leave():
 
 
 
-
     if session["role"]!="담당자":
 
         return "권한 없음"
-
 
 
 
@@ -2868,21 +1252,12 @@ def export_leave():
 
 
 
-
-    filename=(
-
+    filename = (
         "연차신청현황_"
-
         +
-
-        datetime.now().strftime(
-            "%Y%m%d"
-        )
-
+        datetime.now().strftime("%Y%m%d")
         +
-
         ".xlsx"
-
     )
 
 
@@ -2897,7 +1272,6 @@ def export_leave():
 
 
 
-
     return send_file(
 
         filename,
@@ -2906,42 +1280,28 @@ def export_leave():
 
     )
 
-
-
-
-
-
-
-
-
-# ==================================
+# ==========================
 # 구매 요청 엑셀 다운로드
-# ==================================
+# ==========================
 
 @app.route("/export_purchase")
 def export_purchase():
-
 
     if "id" not in session:
 
         return redirect("/login")
 
 
-
-
-    if session["role"]!="담당자":
+    if session["role"] != "담당자":
 
         return "권한 없음"
 
 
 
-
-    conn=get_db()
-
+    conn = get_db()
 
 
-
-    df=pd.read_sql_query(
+    df = pd.read_sql_query(
         """
         SELECT *
 
@@ -2952,31 +1312,19 @@ def export_purchase():
         """,
 
         conn
-
     )
-
 
 
     conn.close()
 
 
 
-
-
-    filename=(
-
+    filename = (
         "구매요청현황_"
-
         +
-
-        datetime.now().strftime(
-            "%Y%m%d"
-        )
-
+        datetime.now().strftime("%Y%m%d")
         +
-
         ".xlsx"
-
     )
 
 
@@ -2991,7 +1339,6 @@ def export_purchase():
 
 
 
-
     return send_file(
 
         filename,
@@ -3001,44 +1348,30 @@ def export_purchase():
     )
 
 
-# ==================================
+# ==========================
 # 로그아웃
-# ==================================
+# ==========================
 
 @app.route("/logout")
 def logout():
 
-
     session.clear()
 
-
-    return redirect(
-        "/login"
-    )
+    return redirect("/login")
 
 
 
 
 
-
-
-# ==================================
+# ==========================
 # 실행
-# ==================================
+# ==========================
 
 init_db()
 
-
-
 if __name__=="__main__":
 
-
     app.run(
-
         host="0.0.0.0",
-
-        port=5000,
-
-        debug=True
-
-    )    
+        port=5000
+    )
