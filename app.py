@@ -7,7 +7,6 @@ import pandas as pd
 app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
 
-init_db()
 
 
 # ==========================
