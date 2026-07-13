@@ -100,7 +100,49 @@ def init_db():
     )
     """)
 
+    # 승인 이력 컬럼 추가
 
+    try:
+
+        cur.execute("""
+        ALTER TABLE leave_request
+        ADD COLUMN approval_history TEXT
+        """)
+
+    except:
+
+        pass
+
+    try:
+
+        cur.execute("""
+        ALTER TABLE purchase_request
+        ADD COLUMN approval_history TEXT
+        """)
+
+    except:
+
+        pass    
+
+    # 반려 이력 컬럼 추가
+
+    try:
+        cur.execute("""
+        ALTER TABLE leave_request
+        ADD COLUMN reject_history TEXT
+        """)
+    except:
+        pass
+
+
+    try:
+        cur.execute("""
+        ALTER TABLE purchase_request
+        ADD COLUMN reject_history TEXT
+        """)
+    except:
+        pass
+        
 
     # 기존 DB 컬럼 추가
 
@@ -120,7 +162,6 @@ def init_db():
         """)
     except:
         pass
-
 
 
     # 기본 사용자
@@ -798,22 +839,62 @@ def approve(id,kind):
 
 
     next_status=get_next_status_by_role(role)
+    now=datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
 
+    history_text = (
+
+        session["role"]
+        + " "
+        + session["name"]
+        + " 승인 "
+        + now
+
+    )
 
     if kind=="leave":
 
 
         cur.execute("""
+        SELECT approval_history
+
+        FROM leave_request
+
+        WHERE id=?
+        """,
+        (id,))
+
+
+        old=cur.fetchone()[0]
+
+
+        if old:
+
+            history = old + "\n" + history_text
+
+        else:
+
+            history = history_text
+
+
+
+        cur.execute("""
         UPDATE leave_request
 
-        SET status=?
+        SET
+
+        status=?,
+
+        approval_history=?
 
         WHERE id=?
 
         """,
         (
         next_status,
+        history,
         id
         ))
 
@@ -822,15 +903,44 @@ def approve(id,kind):
 
 
         cur.execute("""
+        SELECT approval_history
+
+        FROM purchase_request
+
+        WHERE id=?
+
+        """,
+        (id,))
+
+
+        row=cur.fetchone()
+
+
+        if row[0]:
+
+            history = row[0] + "\n" + history_text
+
+        else:
+
+            history = history_text
+
+
+
+        cur.execute("""
         UPDATE purchase_request
 
-        SET status=?
+        SET
+
+        status=?,
+
+        approval_history=?
 
         WHERE id=?
 
         """,
         (
         next_status,
+        history,
         id
         ))
 
@@ -853,23 +963,31 @@ def reject(id,kind):
 
 
     if "id" not in session:
-
         return redirect("/login")
-
 
 
     if request.method=="POST":
 
-
         reason=request.form["reason"]
+
+        now=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+        reject_text = (
+            session["role"]
+            + " "
+            + session["name"]
+            + " 반려 : "
+            + reason
+            + " "
+            + now
+        )
 
 
         status="반려 : " + reason
 
 
-
         conn=get_db()
-
         cur=conn.cursor()
 
 
@@ -878,41 +996,96 @@ def reject(id,kind):
 
 
             cur.execute("""
+            SELECT reject_history
+
+            FROM leave_request
+
+            WHERE id=?
+            """,
+            (id,))
+
+
+            row=cur.fetchone()
+
+
+            if row[0]:
+
+                history=row[0]+"\n"+reject_text
+
+            else:
+
+                history=reject_text
+
+
+
+            cur.execute("""
             UPDATE leave_request
 
-            SET status=?
+            SET
+
+            status=?,
+
+            reject_history=?
 
             WHERE id=?
 
             """,
             (
             status,
+            history,
             id
             ))
+
 
 
         else:
 
 
             cur.execute("""
+            SELECT reject_history
+
+            FROM purchase_request
+
+            WHERE id=?
+            """,
+            (id,))
+
+
+            row=cur.fetchone()
+
+
+            if row[0]:
+
+                history=row[0]+"\n"+reject_text
+
+            else:
+
+                history=reject_text
+
+
+
+            cur.execute("""
             UPDATE purchase_request
 
-            SET status=?
+            SET
+
+            status=?,
+
+            reject_history=?
 
             WHERE id=?
 
             """,
             (
             status,
+            history,
             id
             ))
 
 
 
         conn.commit()
-
         conn.close()
-
 
 
         return redirect("/approval")
@@ -920,7 +1093,6 @@ def reject(id,kind):
 
 
     return """
-
     <h2 style='text-align:center'>
     반려 사유 입력
     </h2>
@@ -938,10 +1110,7 @@ def reject(id,kind):
     </button>
 
     </form>
-
     """
-
-
 
 
 # ==========================
