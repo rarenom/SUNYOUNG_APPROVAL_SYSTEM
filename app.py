@@ -208,11 +208,13 @@ def login():
 
 
         conn = get_db()
-
         cur = conn.cursor()
 
+        # DB 전체 사용자 확인
+        cur.execute("SELECT * FROM users")
+        print("전체 사용자 :", cur.fetchall())
 
-        cur.execute("""
+        ur.execute("""
         SELECT *
         FROM users
         WHERE user_id=?
@@ -220,7 +222,7 @@ def login():
         """,
         (
             user_id,
-            password
+            assword
         ))
 
 
