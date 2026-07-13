@@ -4,7 +4,6 @@ from datetime import datetime
 import pandas as pd
 import os
 
-os.makedirs("/data", exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
