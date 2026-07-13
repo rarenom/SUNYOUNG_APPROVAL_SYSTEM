@@ -348,6 +348,7 @@ SUNYOUNG 전자결재 SYSTEM
 
 
 
+
 <!-- 결재 권한 -->
 
 
@@ -372,10 +373,12 @@ SUNYOUNG 전자결재 SYSTEM
 
 
 
+
 <!-- 담당자 직원관리 -->
 
-{% if role == "담당자" %}
+<!-- 직원 관리 -->
 
+{% if role == "담당자" %}
 
 <a href="/user_manage">
 
@@ -387,6 +390,13 @@ SUNYOUNG 전자결재 SYSTEM
 
 </a>
 
+{% endif %}
+
+
+
+<!-- 엑셀 저장 담당자 / 대표 -->
+
+{% if role in ["담당자","대표"] %}
 
 
 <a href="/export_leave">
@@ -415,6 +425,41 @@ SUNYOUNG 전자결재 SYSTEM
 {% endif %}
 
 
+<!-- 전체 결재 진행 현황 -->
+
+{% if role in ["담당자","대표"] %}
+
+<a href="/approval_status">
+
+<button class="manage">
+
+📊 전체 결재 진행 현황
+
+</button>
+
+</a>
+
+{% endif %}
+
+<!-- DB 백업 저장 담당자 / 대표 -->
+
+{% if role in ["담당자","대표"] %}
+
+
+<a href="/backup_database">
+
+<button class="manage">
+
+💾 DB 백업 저장
+
+</button>
+
+</a>
+
+
+{% endif %}
+
+
 
 
 <a href="/logout">
@@ -426,6 +471,7 @@ SUNYOUNG 전자결재 SYSTEM
 </button>
 
 </a>
+
 
 
 

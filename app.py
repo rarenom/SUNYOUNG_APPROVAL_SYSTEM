@@ -15,8 +15,15 @@ app.secret_key = "SUNYOUNG_SECRET_KEY"
 # ==========================
 
 def get_db():
-    return sqlite3.connect("database.db")
 
+    db_path = os.path.join(
+        os.path.dirname(__file__),
+        "database.db"
+    )
+
+    print("DB 위치 :", db_path)
+
+    return sqlite3.connect(db_path)
 
 
 # ==========================
@@ -645,16 +652,117 @@ def my_request():
 
     )   
 
-
-
-
-
 # ==========================
 # 결재 대기함
 # ==========================
 
 @app.route("/approval")
 def approval():
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    role = session["role"]
+
+
+    # 현재 로그인자의 승인 차례
+    if role == "공장장":
+
+        status = "공장장 승인 대기"
+
+
+    elif role == "담당자":
+
+        status = "담당자 승인 대기"
+
+
+    elif role == "대표":
+
+        status = "대표 승인 대기"
+
+
+    else:
+
+        return "권한 없음"
+
+
+
+    conn = get_db()
+
+    cur = conn.cursor()
+
+
+
+    # ==========================
+    # 연차 결재 대기
+    # ==========================
+
+    cur.execute("""
+    SELECT *
+
+    FROM leave_request
+
+    WHERE status=?
+
+    ORDER BY id DESC
+
+    """,
+    (
+        status,
+    ))
+
+
+    leave_data = cur.fetchall()
+
+
+
+    # ==========================
+    # 구매 결재 대기
+    # ==========================
+
+    cur.execute("""
+    SELECT *
+
+    FROM purchase_request
+
+    WHERE status=?
+
+    ORDER BY id DESC
+
+    """,
+    (
+        status,
+    ))
+
+
+    purchase_data = cur.fetchall()
+
+
+
+    conn.close()
+
+
+
+    return render_template(
+
+        "approval.html",
+
+        leave_data=leave_data,
+
+        purchase_data=purchase_data
+
+    )
+
+
+
+
+# ==========================
+# 전체 결재 진행 현황
+# ==========================
+
+@app.route("/approval_status")
+def approval_status():
 
 
     if "id" not in session:
@@ -663,29 +771,9 @@ def approval():
 
 
 
-    role=session["role"]
-
-
-
-    if role=="공장장":
-
-        status="공장장 승인 대기"
-
-
-    elif role=="담당자":
-
-        status="담당자 승인 대기"
-
-
-    elif role=="대표":
-
-        status="대표 승인 대기"
-
-
-    else:
+    if session["role"] not in ["담당자","대표"]:
 
         return "권한 없음"
-
 
 
 
@@ -697,7 +785,6 @@ def approval():
 
     cur.execute("""
     SELECT *
-
     FROM leave_request
 
     WHERE status IN
@@ -721,7 +808,6 @@ def approval():
 
     cur.execute("""
     SELECT *
-
     FROM purchase_request
 
     WHERE status IN
@@ -749,15 +835,14 @@ def approval():
 
     return render_template(
 
-        "approval.html",
+        "approval_status.html",
 
         leave_data=leave_data,
 
         purchase_data=purchase_data
 
     )
-
-
+    
 # ==========================
 # 다음 승인 단계 계산
 # ==========================
@@ -815,16 +900,101 @@ def approve(id,kind):
 
 
 
+    # ==========================
+    # 현재 결재 상태 확인
+    # ==========================
+
+
+    if kind=="leave":
+
+        cur.execute("""
+        SELECT status
+        FROM leave_request
+        WHERE id=?
+        """,
+        (id,))
+
+
+    else:
+
+        cur.execute("""
+        SELECT status
+        FROM purchase_request
+        WHERE id=?
+        """,
+        (id,))
+
+
+    status_row = cur.fetchone()
+
+
+    if not status_row:
+
+        conn.close()
+
+        return "자료 없음"
+
+
+    current_status=status_row[0]
+
+
+
+    # ==========================
+    # 승인 순서 체크
+    # ==========================
+
+
+    if role=="공장장" and current_status!="공장장 승인 대기":
+
+        conn.close()
+
+        return """
+        <script>
+        alert('현재 공장장 승인 차례가 아닙니다.');
+        history.back();
+        </script>
+        """
+
+
+
+    if role=="담당자" and current_status!="담당자 승인 대기":
+
+        conn.close()
+
+        return """
+        <script>
+        alert('현재 담당자 승인 차례가 아닙니다.');
+        history.back();
+        </script>
+        """
+
+
+
+    if role=="대표" and current_status!="대표 승인 대기":
+
+        conn.close()
+
+        return """
+        <script>
+        alert('현재 대표 승인 차례가 아닙니다.');
+        history.back();
+        </script>
+        """
+
+
+
+    # ==========================
+    # 신청자 확인
+    # ==========================
+
+
     if kind=="leave":
 
 
         cur.execute("""
         SELECT applicant
-
         FROM leave_request
-
         WHERE id=?
-
         """,
         (id,))
 
@@ -834,17 +1004,15 @@ def approve(id,kind):
 
         cur.execute("""
         SELECT applicant
-
         FROM purchase_request
-
         WHERE id=?
-
         """,
         (id,))
 
 
 
     row=cur.fetchone()
+
 
 
     if not row:
@@ -860,12 +1028,16 @@ def approve(id,kind):
 
 
     next_status=get_next_status_by_role(role)
+
+
+
     now=datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S"
     )
 
 
-    history_text = (
+
+    history_text=(
 
         session["role"]
         + " "
@@ -875,14 +1047,19 @@ def approve(id,kind):
 
     )
 
+
+
+    # ==========================
+    # 연차 승인
+    # ==========================
+
+
     if kind=="leave":
 
 
         cur.execute("""
         SELECT approval_history
-
         FROM leave_request
-
         WHERE id=?
         """,
         (id,))
@@ -891,13 +1068,14 @@ def approve(id,kind):
         old=cur.fetchone()[0]
 
 
+
         if old:
 
-            history = old + "\n" + history_text
+            history=old+"\n"+history_text
 
         else:
 
-            history = history_text
+            history=history_text
 
 
 
@@ -920,30 +1098,35 @@ def approve(id,kind):
         ))
 
 
+
+    # ==========================
+    # 구매 승인
+    # ==========================
+
+
     else:
 
 
         cur.execute("""
         SELECT approval_history
-
         FROM purchase_request
-
         WHERE id=?
-
         """,
         (id,))
 
 
-        row=cur.fetchone()
+
+        old=cur.fetchone()[0]
 
 
-        if row[0]:
 
-            history = row[0] + "\n" + history_text
+        if old:
+
+            history=old+"\n"+history_text
 
         else:
 
-            history = history_text
+            history=history_text
 
 
 
@@ -1562,11 +1745,18 @@ def backup_database():
     )
 
 
+    db_path = os.path.join(
+        os.path.dirname(__file__),
+        "database.db"
+    )
+
+
     return send_file(
-        "database.db",
+        db_path,
         as_attachment=True,
         download_name=filename
     )
+
 # ==========================
 # 로그아웃
 # ==========================
