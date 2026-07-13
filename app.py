@@ -166,30 +166,21 @@ def init_db():
     ]
 
     for user in default_users:
-
         cur.execute("""
         INSERT OR IGNORE INTO users
         (
-        user_id,
-        password,
-        name,
-        role,
-        factory_approval,
-        manager_approval
+            user_id,
+            password,
+            name,
+            role,
+            factory_approval,
+            manager_approval
         )
+        VALUES (?,?,?,?,?,?)
+        """, user)
 
-        VALUES(?,?,?,?,?,?)
-        """,
-        user)
-
-    
-
-        conn.commit()
-
-        conn.close()
-
-
-
+    conn.commit()
+    conn.close()
 
 # ==========================
 # 시작
