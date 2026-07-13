@@ -18,14 +18,13 @@ app.secret_key = "SUNYOUNG_SECRET_KEY"
 def get_db():
 
     db_path = os.path.join(
-        "/data",
+        os.path.dirname(__file__),
         "database.db"
     )
 
     print("DB 위치 :", db_path)
 
     return sqlite3.connect(db_path)
-
 
 # ==========================
 # DB 생성
@@ -1166,14 +1165,11 @@ def approve(id,kind):
 @app.route("/reject/<int:id>/<kind>", methods=["GET","POST"])
 def reject(id,kind):
 
-
     if "id" not in session:
-
         return redirect("/login")
 
 
-
-    if request.method == "GET":
+    if request.method=="GET":
 
         return render_template(
             "reject.html",
@@ -1182,9 +1178,7 @@ def reject(id,kind):
         )
 
 
-
     reason=request.form["reason"]
-
 
 
     now=datetime.now().strftime(
@@ -1192,9 +1186,7 @@ def reject(id,kind):
     )
 
 
-
-    reject_text=(
-
+    reject_text = (
         session["role"]
         + " "
         + session["name"]
@@ -1202,19 +1194,14 @@ def reject(id,kind):
         + reason
         + " "
         + now
-
     )
-
 
 
     status="반려 : " + reason
 
 
-
     conn=get_db()
-
     cur=conn.cursor()
-
 
 
     if kind=="leave":
@@ -1222,11 +1209,8 @@ def reject(id,kind):
 
         cur.execute("""
         SELECT reject_history
-
         FROM leave_request
-
         WHERE id=?
-
         """,
         (id,))
 
@@ -1234,27 +1218,17 @@ def reject(id,kind):
         row=cur.fetchone()
 
 
-        if row[0]:
-
-            history=row[0]+"\n"+reject_text
-
-        else:
-
-            history=reject_text
-
+        history = row[0] + "\n" + reject_text if row[0] else reject_text
 
 
         cur.execute("""
         UPDATE leave_request
 
         SET
-
         status=?,
-
         reject_history=?
 
         WHERE id=?
-
         """,
         (
         status,
@@ -1269,11 +1243,8 @@ def reject(id,kind):
 
         cur.execute("""
         SELECT reject_history
-
         FROM purchase_request
-
         WHERE id=?
-
         """,
         (id,))
 
@@ -1281,27 +1252,17 @@ def reject(id,kind):
         row=cur.fetchone()
 
 
-        if row[0]:
-
-            history=row[0]+"\n"+reject_text
-
-        else:
-
-            history=reject_text
-
+        history = row[0] + "\n" + reject_text if row[0] else reject_text
 
 
         cur.execute("""
         UPDATE purchase_request
 
         SET
-
         status=?,
-
         reject_history=?
 
         WHERE id=?
-
         """,
         (
         status,
@@ -1310,11 +1271,8 @@ def reject(id,kind):
         ))
 
 
-
     conn.commit()
-
     conn.close()
-
 
 
     return redirect("/approval")
