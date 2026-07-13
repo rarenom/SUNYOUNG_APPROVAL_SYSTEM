@@ -696,65 +696,36 @@ def approval():
     )
 
 
-
-
-
 # ==========================
 # 다음 승인 단계 계산
 # ==========================
 
-def get_next_status(applicant):
-
-    conn=get_db()
-    cur=conn.cursor()
+def get_next_status_by_role(role):
 
 
-    cur.execute("""
-    SELECT factory_approval,
-           manager_approval
-
-    FROM users
-
-    WHERE name=?
-    """,
-    (applicant,))
-
-
-    data=cur.fetchone()
-
-    conn.close()
-
-
-
-    if not data:
-
-        return "최종 승인 완료"
-
-
-
-    factory=data[0]
-
-    manager=data[1]
-
-
-
-    # 공장장 승인 전
-    if factory==1:
+    # 공장장 승인 후
+    if role=="공장장":
 
         return "담당자 승인 대기"
 
 
 
-    # 담당자 승인 전
-    if manager==1:
+    # 담당자 승인 후
+    elif role=="담당자":
 
         return "대표 승인 대기"
 
 
 
-    # 모두 완료
+    # 대표 승인 후
+    elif role=="대표":
+
+        return "최종 승인 완료"
+
+
 
     return "최종 승인 완료"
+
 
 
 
@@ -826,7 +797,7 @@ def approve(id,kind):
 
 
 
-    next_status=get_next_status(applicant)
+    next_status=get_next_status_by_role(role)
 
 
 
