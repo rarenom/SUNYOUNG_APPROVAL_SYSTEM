@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, send_file
 import sqlite3
 from datetime import datetime
 import pandas as pd
+import os
 
 
 app = Flask(__name__)
@@ -638,9 +639,11 @@ def my_request():
 
         leave_data=leave_data,
 
-        purchase_data=purchase_data
+        purchase_data=purchase_data,
 
-    )
+        role=session["role"]
+
+    )   
 
 
 
@@ -697,10 +700,19 @@ def approval():
 
     FROM leave_request
 
-    WHERE status=?
+    WHERE status IN
+    (
+    '공장장 승인 대기',
+    '담당자 승인 대기',
+    '대표 승인 대기',
+    '최종 승인 완료'
+    )
 
-    """,
-    (status,))
+    OR status LIKE '반려%'
+
+    ORDER BY id DESC
+
+    """)
 
 
     leave_data=cur.fetchall()
@@ -712,10 +724,19 @@ def approval():
 
     FROM purchase_request
 
-    WHERE status=?
+    WHERE status IN
+    (
+    '공장장 승인 대기',
+    '담당자 승인 대기',
+    '대표 승인 대기',
+    '최종 승인 완료'
+    )
 
-    """,
-    (status,))
+    OR status LIKE '반려%'
+
+    ORDER BY id DESC
+
+    """)
 
 
     purchase_data=cur.fetchall()
@@ -1088,7 +1109,7 @@ def reject(id,kind):
         conn.close()
 
 
-        return redirect("/approval")
+    return redirect("/approval")
 
 
 
@@ -1126,7 +1147,7 @@ def user_manage():
         return redirect("/login")
 
 
-    if session["role"]!="담당자":
+    if session["role"] not in ["담당자","대표"]:
 
         return "권한 없음"
 
@@ -1230,7 +1251,7 @@ def user_edit(id):
 
 
 
-    if session["role"]!="담당자":
+    if session["role"] not in ["담당자","대표"]:
 
         return "권한 없음"
 
@@ -1393,10 +1414,9 @@ def export_leave():
 
 
 
-    if session["role"]!="담당자":
+    if session["role"] not in ["담당자","대표"]:
 
         return "권한 없음"
-
 
 
     conn=get_db()
@@ -1461,7 +1481,7 @@ def export_purchase():
         return redirect("/login")
 
 
-    if session["role"] != "담당자":
+    if session["role"] not in ["담당자","대표"]:
 
         return "권한 없음"
 
@@ -1516,7 +1536,37 @@ def export_purchase():
 
     )
 
+# ==========================
+# DB 백업 다운로드
+# ==========================
 
+@app.route("/backup_database")
+def backup_database():
+
+    if "id" not in session:
+
+        return redirect("/login")
+
+
+    if session["role"] not in ["담당자","대표"]:
+
+        return "권한 없음"
+
+
+    filename = (
+        "SUNYOUNG_BACKUP_"
+        +
+        datetime.now().strftime("%Y%m%d")
+        +
+        ".db"
+    )
+
+
+    return send_file(
+        "database.db",
+        as_attachment=True,
+        download_name=filename
+    )
 # ==========================
 # 로그아웃
 # ==========================
