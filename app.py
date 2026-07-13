@@ -166,32 +166,24 @@ def init_db():
 
     ]
 
+for user in default_users:
 
+    cur.execute("""
+    INSERT OR IGNORE INTO users
+    (
+    user_id,
+    password,
+    name,
+    role,
+    factory_approval,
+    manager_approval
+    )
 
-    for user in default_users:
+    VALUES(?,?,?,?,?,?)
+    """,
+    user)
 
-        try:
-
-            cur.execute("""
-            INSERT INTO users
-            (
-            user_id,
-            password,
-            name,
-            role,
-            factory_approval,
-            manager_approval
-            )
-
-            VALUES(?,?,?,?,?,?)
-            """,
-            user)
-
-        except:
-
-            pass
-
-
+    
 
     conn.commit()
 
@@ -1433,6 +1425,7 @@ def logout():
 init_db()
 
 if __name__=="__main__":
+
     app.run(
         host="0.0.0.0",
         port=5000
