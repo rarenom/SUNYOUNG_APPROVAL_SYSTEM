@@ -214,15 +214,14 @@ def login():
         cur.execute("SELECT * FROM users")
         print("전체 사용자 :", cur.fetchall())
 
-        ur.execute("""
+        cur.execute("""
         SELECT *
         FROM users
         WHERE user_id=?
         AND password=?
-        """,
-        (
+        """, (
             user_id,
-            assword
+            password
         ))
 
 
