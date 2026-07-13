@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import os
 
+os.makedirs("/data", exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
@@ -17,7 +18,7 @@ app.secret_key = "SUNYOUNG_SECRET_KEY"
 def get_db():
 
     db_path = os.path.join(
-        os.path.dirname(__file__),
+        "/data",
         "database.db"
     )
 
@@ -1167,155 +1168,156 @@ def reject(id,kind):
 
 
     if "id" not in session:
+
         return redirect("/login")
 
 
-    if request.method=="POST":
 
-        reason=request.form["reason"]
+    if request.method == "GET":
 
-        now=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-        reject_text = (
-            session["role"]
-            + " "
-            + session["name"]
-            + " 반려 : "
-            + reason
-            + " "
-            + now
+        return render_template(
+            "reject.html",
+            id=id,
+            kind=kind
         )
 
 
-        status="반려 : " + reason
 
-
-        conn=get_db()
-        cur=conn.cursor()
+    reason=request.form["reason"]
 
 
 
-        if kind=="leave":
-
-
-            cur.execute("""
-            SELECT reject_history
-
-            FROM leave_request
-
-            WHERE id=?
-            """,
-            (id,))
-
-
-            row=cur.fetchone()
-
-
-            if row[0]:
-
-                history=row[0]+"\n"+reject_text
-
-            else:
-
-                history=reject_text
+    now=datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
 
 
-            cur.execute("""
-            UPDATE leave_request
+    reject_text=(
 
-            SET
+        session["role"]
+        + " "
+        + session["name"]
+        + " 반려 : "
+        + reason
+        + " "
+        + now
 
-            status=?,
-
-            reject_history=?
-
-            WHERE id=?
-
-            """,
-            (
-            status,
-            history,
-            id
-            ))
+    )
 
 
+
+    status="반려 : " + reason
+
+
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    if kind=="leave":
+
+
+        cur.execute("""
+        SELECT reject_history
+
+        FROM leave_request
+
+        WHERE id=?
+
+        """,
+        (id,))
+
+
+        row=cur.fetchone()
+
+
+        if row[0]:
+
+            history=row[0]+"\n"+reject_text
 
         else:
 
-
-            cur.execute("""
-            SELECT reject_history
-
-            FROM purchase_request
-
-            WHERE id=?
-            """,
-            (id,))
-
-
-            row=cur.fetchone()
-
-
-            if row[0]:
-
-                history=row[0]+"\n"+reject_text
-
-            else:
-
-                history=reject_text
+            history=reject_text
 
 
 
-            cur.execute("""
-            UPDATE purchase_request
+        cur.execute("""
+        UPDATE leave_request
 
-            SET
+        SET
 
-            status=?,
+        status=?,
 
-            reject_history=?
+        reject_history=?
 
-            WHERE id=?
+        WHERE id=?
 
-            """,
-            (
-            status,
-            history,
-            id
-            ))
+        """,
+        (
+        status,
+        history,
+        id
+        ))
 
 
 
-        conn.commit()
-        conn.close()
+    else:
+
+
+        cur.execute("""
+        SELECT reject_history
+
+        FROM purchase_request
+
+        WHERE id=?
+
+        """,
+        (id,))
+
+
+        row=cur.fetchone()
+
+
+        if row[0]:
+
+            history=row[0]+"\n"+reject_text
+
+        else:
+
+            history=reject_text
+
+
+
+        cur.execute("""
+        UPDATE purchase_request
+
+        SET
+
+        status=?,
+
+        reject_history=?
+
+        WHERE id=?
+
+        """,
+        (
+        status,
+        history,
+        id
+        ))
+
+
+
+    conn.commit()
+
+    conn.close()
+
 
 
     return redirect("/approval")
-
-
-
-    return """
-    <h2 style='text-align:center'>
-    반려 사유 입력
-    </h2>
-
-    <form method='post'
-    style='text-align:center'>
-
-    <textarea name='reason'
-    style='width:300px;height:100px'></textarea>
-
-    <br><br>
-
-    <button>
-    반려 처리
-    </button>
-
-    </form>
-    """
-
 
 # ==========================
 # 직원 관리
