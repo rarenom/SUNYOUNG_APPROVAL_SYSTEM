@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_file
-import sqlite3
+import psycopg2
 from datetime import datetime
 import pandas as pd
 import os
@@ -11,19 +11,18 @@ app.secret_key = "SUNYOUNG_SECRET_KEY"
 
 
 # ==========================
-# DB 연결
+# DB 연결 (Supabase PostgreSQL)
 # ==========================
 
 def get_db():
 
-    db_path = os.path.join(
-        os.path.dirname(__file__),
-        "database.db"
+    database_url = os.environ.get("DATABASE_URL")
+
+    conn = psycopg2.connect(
+        database_url
     )
 
-    print("DB 위치 :", db_path)
-
-    return sqlite3.connect(db_path)
+    return conn
 
 # ==========================
 # DB 생성
@@ -32,6 +31,9 @@ def get_db():
 def init_db():
 
     conn = get_db()
+
+    conn.autocommit = True
+
     cur = conn.cursor()
 
 
@@ -40,7 +42,7 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         user_id TEXT UNIQUE,
 
@@ -64,7 +66,7 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS leave_request(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         applicant TEXT,
 
@@ -90,7 +92,7 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS purchase_request(
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
 
         applicant TEXT,
 
@@ -113,7 +115,7 @@ def init_db():
 
         cur.execute("""
         ALTER TABLE leave_request
-        ADD COLUMN approval_history TEXT
+        ADD COLUMN IF NOT EXISTS approval_history TEXT
         """)
 
     except:
@@ -124,7 +126,7 @@ def init_db():
 
         cur.execute("""
         ALTER TABLE purchase_request
-        ADD COLUMN approval_history TEXT
+        ADD COLUMN IF NOT EXISTS approval_history TEXT
         """)
 
     except:
@@ -136,7 +138,7 @@ def init_db():
     try:
         cur.execute("""
         ALTER TABLE leave_request
-        ADD COLUMN reject_history TEXT
+        ADD COLUMN IF NOT EXISTS reject_history TEXT
         """)
     except:
         pass
@@ -156,7 +158,7 @@ def init_db():
     try:
         cur.execute("""
         ALTER TABLE users
-        ADD COLUMN factory_approval INTEGER DEFAULT 1
+        ADD COLUMN IF NOT EXISTS factory_approval INTEGER DEFAULT 1
         """)
     except:
         pass
@@ -165,7 +167,7 @@ def init_db():
     try:
         cur.execute("""
         ALTER TABLE users
-        ADD COLUMN manager_approval INTEGER DEFAULT 1
+        ADD COLUMN IF NOT EXISTS manager_approval INTEGER DEFAULT 1
         """)
     except:
         pass
@@ -215,7 +217,7 @@ def init_db():
 
     for user in default_users:
         cur.execute("""
-        INSERT OR IGNORE INTO users
+        INSERT INTO users
         (
             user_id,
             password,
@@ -224,7 +226,9 @@ def init_db():
             factory_approval,
             manager_approval
         )
-        VALUES (?,?,?,?,?,?)
+        VALUES (%s,%s,%s,%s,%s,%s)
+        ON CONFLICT (user_id)
+        DO NOTHING
         """, user)
 
     conn.commit()
@@ -265,8 +269,8 @@ def login():
         cur.execute("""
         SELECT *
         FROM users
-        WHERE user_id=?
-        AND password=?
+        WHERE user_id=%s
+        AND password=%s
         """, (
             user_id,
             password
@@ -364,7 +368,7 @@ def get_first_status(name):
 
     FROM users
 
-    WHERE name=?
+    WHERE name=%s
 
     """,
     (name,))
@@ -450,7 +454,7 @@ def leave():
         reg_date
         )
 
-        VALUES(?,?,?,?,?,?,?)
+        VALUES(%s,%s,%s,%s,%s,%s,%s)
 
         """,
         (
@@ -532,7 +536,7 @@ def purchase():
         reg_date
         )
 
-        VALUES(?,?,?,?,?,?)
+        VALUES(%s,%s,%s,%s,%s,%s)
 
         """,
         (
@@ -602,7 +606,7 @@ def my_request():
 
     FROM leave_request
 
-    WHERE applicant=?
+    WHERE applicant=%s
 
     ORDER BY id DESC
 
@@ -621,7 +625,7 @@ def my_request():
 
     FROM purchase_request
 
-    WHERE applicant=?
+    WHERE applicant=%s
 
     ORDER BY id DESC
 
@@ -702,7 +706,7 @@ def approval():
 
     FROM leave_request
 
-    WHERE status=?
+    WHERE status=%s
 
     ORDER BY id DESC
 
@@ -725,7 +729,7 @@ def approval():
 
     FROM purchase_request
 
-    WHERE status=?
+    WHERE status=%s
 
     ORDER BY id DESC
 
@@ -909,7 +913,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT status
         FROM leave_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -919,7 +923,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT status
         FROM purchase_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -993,7 +997,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT applicant
         FROM leave_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1004,7 +1008,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT applicant
         FROM purchase_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1059,7 +1063,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT approval_history
         FROM leave_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1083,11 +1087,11 @@ def approve(id,kind):
 
         SET
 
-        status=?,
+        status=%s,
 
-        approval_history=?
+        approval_history=%s
 
-        WHERE id=?
+        WHERE id=%s
 
         """,
         (
@@ -1109,7 +1113,7 @@ def approve(id,kind):
         cur.execute("""
         SELECT approval_history
         FROM purchase_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1134,11 +1138,11 @@ def approve(id,kind):
 
         SET
 
-        status=?,
+        status=%s,
 
-        approval_history=?
+        approval_history=%s
 
-        WHERE id=?
+        WHERE id=%s
 
         """,
         (
@@ -1209,7 +1213,7 @@ def reject(id,kind):
         cur.execute("""
         SELECT reject_history
         FROM leave_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1224,10 +1228,10 @@ def reject(id,kind):
         UPDATE leave_request
 
         SET
-        status=?,
-        reject_history=?
+        status=%s,
+        reject_history=%s
 
-        WHERE id=?
+        WHERE id=%s
         """,
         (
         status,
@@ -1243,7 +1247,7 @@ def reject(id,kind):
         cur.execute("""
         SELECT reject_history
         FROM purchase_request
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,))
 
@@ -1258,10 +1262,10 @@ def reject(id,kind):
         UPDATE purchase_request
 
         SET
-        status=?,
-        reject_history=?
+        status=%s,
+        reject_history=%s
 
-        WHERE id=?
+        WHERE id=%s
         """,
         (
         status,
@@ -1315,7 +1319,7 @@ def user_manage():
         manager_approval
         )
 
-        VALUES(?,?,?,?,?,?)
+        VALUES(%s,%s,%s,%s,%s,%s)
 
         """,
         (
@@ -1427,9 +1431,9 @@ def user_edit(id):
 
         FROM users
 
-        WHERE user_id=?
-
-        AND id!=?
+        WHERE user_id=%s
+        
+        AND id!=%s
 
         """,
         (
@@ -1463,19 +1467,19 @@ def user_edit(id):
 
         SET
 
-        user_id=?,
+        user_id=%s,
 
-        password=?,
+        password=%s,
 
-        name=?,
+        name=%s,
 
-        role=?,
+        role=%s,
 
-        factory_approval=?,
+        factory_approval=%s,
 
-        manager_approval=?
+        manager_approval=%s
 
-        WHERE id=?
+        WHERE id=%s
 
         """,
         (
@@ -1515,7 +1519,7 @@ def user_edit(id):
 
     FROM users
 
-    WHERE id=?
+    WHERE id=%s
 
     """,
     (id,))
@@ -1686,36 +1690,63 @@ def export_purchase():
 def backup_database():
 
     if "id" not in session:
-
         return redirect("/login")
 
 
     if session["role"] not in ["담당자","대표"]:
-
         return "권한 없음"
 
 
-    filename = (
-        "SUNYOUNG_BACKUP_"
-        +
-        datetime.now().strftime("%Y%m%d")
-        +
-        ".db"
+    conn = get_db()
+
+
+    # PostgreSQL 데이터 백업용 CSV 생성
+
+    tables = [
+        "users",
+        "leave_request",
+        "purchase_request"
+    ]
+
+
+    backup_folder = "backup"
+
+    os.makedirs(
+        backup_folder,
+        exist_ok=True
     )
 
 
-    db_path = os.path.join(
-        os.path.dirname(__file__),
-        "database.db"
-    )
+    files = []
 
 
-    return send_file(
-        db_path,
-        as_attachment=True,
-        download_name=filename
-    )
+    for table in tables:
 
+        df = pd.read_sql_query(
+            f"SELECT * FROM {table}",
+            conn
+        )
+
+
+        filename = os.path.join(
+            backup_folder,
+            f"{table}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        )
+
+
+        df.to_excel(
+            filename,
+            index=False
+        )
+
+
+        files.append(filename)
+
+
+    conn.close()
+
+
+    return "백업 완료 : " + ", ".join(files)
 # ==========================
 # 로그아웃
 # ==========================
