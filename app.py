@@ -18,8 +18,12 @@ def get_db():
 
     database_url = os.environ.get("DATABASE_URL")
 
+    if not database_url:
+        raise Exception("DATABASE_URL 환경변수가 없습니다.")
+
     conn = psycopg2.connect(
-        database_url
+        database_url,
+        sslmode="require"
     )
 
     return conn
