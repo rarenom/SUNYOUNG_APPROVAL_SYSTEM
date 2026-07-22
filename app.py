@@ -321,7 +321,7 @@ def login():
 
             return render_template(
                 "login.html",
-                error="아이디 또는 비밀번호가 맞지 않습니다.\n잘 기억해 보세요! 그래도 모르면 010-6669-2266 용현 멋쟁이님 한테 연락주세요"
+                error="아이디 또는 비밀번호가 맞지 않습니다.\n잘 기억해 보세요! 그래도 모르면 담당자에게 문의 바랍니다."
             )
 
 
@@ -410,7 +410,7 @@ def get_first_status(name):
 
     elif manager==1:
 
-        return "담당자 승인 대기"
+        return "담당자 확인 대기"
 
 
 
@@ -686,7 +686,7 @@ def approval():
 
     elif role == "담당자":
 
-        status = "담당자 승인 대기"
+        status = "담당자 확인 대기"
 
 
     elif role == "대표":
