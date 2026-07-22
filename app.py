@@ -182,17 +182,17 @@ def init_db():
     default_users = [
 
         (
-            "employee01",
-            "1234",
-            "홍길동",
+            "jwlee01",
+            "4715",
+            "이재우",
             "직원",
             1,
             1
         ),
 
         (
-            "factory01",
-            "1234",
+            "hrkim01",
+            "3234",
             "김홍래",
             "공장장",
             1,
@@ -200,8 +200,8 @@ def init_db():
         ),
 
         (
-            "manager01",
-            "2017",
+            "rarenom",
+            "2266",
             "박용현",
             "담당자",
             1,
@@ -210,7 +210,7 @@ def init_db():
 
         (
             "ceo01",
-            "2017",
+            "5102",
             "남영진",
             "대표",
             1,
@@ -1546,7 +1546,60 @@ def user_edit(id):
 
     )
 
+# ==========================
+# 직원 삭제
+# ==========================
 
+@app.route("/user_delete/<int:id>")
+def user_delete(id):
+
+    if "id" not in session:
+        return redirect("/login")
+
+    if session["role"] not in ["담당자","대표"]:
+        return "권한 없음"
+
+    conn=get_db()
+    cur=conn.cursor()
+
+    cur.execute("""
+    SELECT user_id
+    FROM users
+    WHERE id=%s
+    """,(id,))
+
+    row=cur.fetchone()
+
+    if not row:
+        conn.close()
+        return redirect("/user_manage")
+
+    # 기본계정 삭제금지
+    if row[0] in [
+        "jwlee01",
+        "hrkim01",
+        "rarenom",
+        "ceo01"
+    ]:
+
+        conn.close()
+
+        return """
+        <script>
+        alert('기본 계정은 삭제할 수 없습니다.');
+        location.href='/user_manage';
+        </script>
+        """
+
+    cur.execute("""
+    DELETE FROM users
+    WHERE id=%s
+    """,(id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/user_manage")
 
 
 

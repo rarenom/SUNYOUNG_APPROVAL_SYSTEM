@@ -325,22 +325,27 @@ value="0">
 
 <td>
 
+<td>
+
 <a href="/user_edit/{{ user[0] }}">
-
 수정
-
 </a>
 
+&nbsp;|
+
+&nbsp;
+
+<a href="/user_delete/{{ user[0] }}"
+onclick="return confirm('정말 삭제하시겠습니까?');"
+style="color:red;">
+삭제
+</a>
 
 </td>
 
-
-
 </tr>
 
-
 {% endfor %}
-
 
 
 </table>
