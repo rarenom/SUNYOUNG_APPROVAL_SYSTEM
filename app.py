@@ -1745,7 +1745,7 @@ def export_purchase():
     )
 
 # ==========================
-# DB 백업 다운로드
+# DB 전체 Excel 백업 다운로드
 # ==========================
 
 @app.route("/backup_database")
@@ -1762,53 +1762,224 @@ def backup_database():
     conn = get_db()
 
 
-    # PostgreSQL 데이터 백업용 CSV 생성
-
-    tables = [
-        "users",
-        "leave_request",
-        "purchase_request"
-    ]
-
-
-    backup_folder = "backup"
-
-    os.makedirs(
-        backup_folder,
-        exist_ok=True
+    filename = (
+        "SUNYOUNG_DB_BACKUP_"
+        +
+        datetime.now().strftime("%Y%m%d")
+        +
+        ".xlsx"
     )
 
 
-    files = []
+    with pd.ExcelWriter(filename) as writer:
 
 
-    for table in tables:
-
-        df = pd.read_sql_query(
-            f"SELECT * FROM {table}",
-            conn
-        )
-
-
-        filename = os.path.join(
-            backup_folder,
-            f"{table}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-        )
+        tables = [
+            "users",
+            "leave_request",
+            "purchase_request"
+        ]
 
 
-        df.to_excel(
-            filename,
-            index=False
-        )
+        for table in tables:
 
 
-        files.append(filename)
+            df = pd.read_sql_query(
+                f"SELECT * FROM {table}",
+                conn
+            )
+
+
+            df.to_excel(
+                writer,
+                sheet_name=table,
+                index=False
+            )
 
 
     conn.close()
 
 
-    return "백업 완료 : " + ", ".join(files)
+    return send_file(
+        filename,
+        as_attachment=True
+    )
+    
+# ==========================
+# DB Excel 복원
+# ==========================
+
+@app.route("/restore_database", methods=["GET","POST"])
+def restore_database():
+
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    if session["role"] not in ["담당자","대표"]:
+        return "권한 없음"
+
+
+
+    if request.method == "POST":
+
+
+        file = request.files["file"]
+
+
+        if not file:
+
+            return """
+            <script>
+            alert('파일을 선택하세요.');
+            history.back();
+            </script>
+            """
+
+
+
+        conn = get_db()
+
+        cur = conn.cursor()
+
+
+
+        tables = [
+
+            "users",
+
+            "leave_request",
+
+            "purchase_request"
+
+        ]
+
+
+
+        try:
+
+
+            # 기존 데이터 삭제
+
+            for table in tables:
+
+                cur.execute(
+                    f"DELETE FROM {table}"
+                )
+
+
+
+            # 엑셀 데이터 읽기
+
+            excel = pd.ExcelFile(file)
+
+
+
+            for table in tables:
+
+
+                if table in excel.sheet_names:
+
+
+                    df = pd.read_excel(
+                        file,
+                        sheet_name=table
+                    )
+
+
+                    columns = list(df.columns)
+
+
+
+                    column_text = ",".join(columns)
+
+
+
+                    value_text = ",".join(
+                        ["%s"] * len(columns)
+                    )
+
+
+
+                    for _, row in df.iterrows():
+
+
+                        values = []
+
+
+                        for v in row:
+
+                            if pd.isna(v):
+
+                                values.append(None)
+
+                            else:
+
+                                values.append(v)
+
+
+
+                        cur.execute(
+                            f"""
+                            INSERT INTO {table}
+                            ({column_text})
+                            VALUES
+                            ({value_text})
+                            """,
+                            values
+                        )
+
+
+
+            conn.commit()
+
+
+            conn.close()
+
+
+
+            return """
+            <script>
+            alert('DB 복원이 완료되었습니다.');
+            location.href='/main';
+            </script>
+            """
+
+
+
+        except Exception as e:
+
+
+            conn.rollback()
+
+            conn.close()
+
+
+            return f"""
+            <script>
+            alert('복원 오류 : {e}');
+            history.back();
+            </script>
+            """
+
+
+
+
+    return """
+    <h2>DB 복원</h2>
+
+    <form method="post" enctype="multipart/form-data">
+
+        <input type="file" name="file">
+
+        <button type="submit">
+        복원 실행
+        </button>
+
+    </form>
+    """
+
 # ==========================
 # 로그아웃
 # ==========================
