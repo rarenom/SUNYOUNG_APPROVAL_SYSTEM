@@ -319,12 +319,17 @@ def login():
 
             print("로그인 실패")
 
+            return render_template(
+                "login.html",
+                error="아이디 또는 비밀번호가 맞지 않습니다.\n담당자에게 문의하세요."
+            )
+
 
 
     return render_template(
-        "login.html"
+        "login.html",
+        error=""
     )
-
 
 
 

@@ -188,6 +188,16 @@ button:hover{
 
 <body>
 
+{% if error %}
+
+<script>
+
+alert("{{ error }}");
+
+</script>
+
+{% endif %}
+
 
 <div class="login-box">
 
