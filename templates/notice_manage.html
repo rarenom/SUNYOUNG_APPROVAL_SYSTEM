@@ -43,7 +43,8 @@ box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 
-input,textarea{
+input,
+textarea{
 
 width:100%;
 
@@ -57,6 +58,8 @@ border:1px solid #ddd;
 
 font-size:16px;
 
+box-sizing:border-box;
+
 }
 
 
@@ -65,6 +68,32 @@ textarea{
 height:120px;
 
 }
+
+
+
+.checkbox_area{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+margin:10px 0 20px 0;
+
+}
+
+
+.checkbox_area input{
+
+width:20px;
+
+height:20px;
+
+margin:0;
+
+}
+
 
 
 button{
@@ -85,7 +114,38 @@ font-size:17px;
 
 font-weight:bold;
 
+cursor:pointer;
+
 }
+
+
+
+.btn_area{
+
+display:flex;
+
+gap:10px;
+
+margin-top:10px;
+
+}
+
+
+
+.btn_area button{
+
+width:50%;
+
+}
+
+
+
+.exit_btn{
+
+background:#64748b;
+
+}
+
 
 
 .notice{
@@ -99,6 +159,62 @@ border-radius:12px;
 background:#f1f5f9;
 
 }
+
+
+
+.notice_title{
+
+font-size:18px;
+
+font-weight:bold;
+
+}
+
+
+.notice_manage{
+
+margin-top:15px;
+
+display:flex;
+
+gap:10px;
+
+}
+
+
+
+.edit_btn{
+
+background:#2563eb;
+
+height:40px;
+
+font-size:14px;
+
+}
+
+
+
+.delete_btn{
+
+background:#dc2626;
+
+height:40px;
+
+font-size:14px;
+
+}
+
+
+
+.important{
+
+color:#dc2626;
+
+font-weight:bold;
+
+}
+
 
 
 </style>
@@ -128,34 +244,65 @@ placeholder="공지 제목"
 required>
 
 
+
 <textarea
 name="content"
-placeholder="공지 내용">
-</textarea>
+placeholder="공지 내용"></textarea>
 
 
 
-<label>
+
+<div class="checkbox_area">
+
 
 <input 
 type="checkbox"
 name="important"
-value="1">
+value="1"
+id="important">
+
+
+<label for="important">
 
 중요 공지
 
 </label>
 
 
-<br><br>
+</div>
 
 
-<button>
+
+<div class="btn_area">
+
+
+<button type="submit">
+
 공지 등록
+
 </button>
 
 
+
+<a href="/main" style="width:50%;">
+
+<button 
+type="button"
+class="exit_btn">
+
+나가기
+
+</button>
+
+</a>
+
+
+</div>
+
+
+
 </form>
+
 
 
 
@@ -167,30 +314,98 @@ value="1">
 
 
 
+
 {% for notice in notices %}
+
+
 
 <div class="notice">
 
-<b>
+
+<div class="notice_title">
+
+
+{% if notice[4] == 1 %}
+
+<span class="important">
+⭐ 중요
+</span>
+
+{% endif %}
+
 
 {{notice[1]}}
 
-</b>
+
+</div>
+
+
 
 <br>
+
 
 
 {{notice[2]}}
 
 
-<br>
+
+<br><br>
 
 
 작성자 :
 {{notice[3]}}
 
 
+
+<br>
+
+
+등록일 :
+{{notice[5]}}
+
+
+
+
+<div class="notice_manage">
+
+
+<a href="/notice_edit/{{notice[0]}}" style="width:50%;">
+
+<button 
+type="button"
+class="edit_btn">
+
+수정
+
+</button>
+
+</a>
+
+
+
+<a 
+href="/notice_delete/{{notice[0]}}"
+onclick="return confirm('공지사항을 삭제하시겠습니까?');"
+style="width:50%;">
+
+<button 
+type="button"
+class="delete_btn">
+
+삭제
+
+</button>
+
+</a>
+
+
+
 </div>
+
+
+
+</div>
+
 
 
 {% endfor %}
