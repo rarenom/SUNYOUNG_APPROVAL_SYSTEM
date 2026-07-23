@@ -513,18 +513,150 @@ style="margin-top:10px;"
 </div>
 
 
-<script>
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { 
+getMessaging,
+getToken
+}
+from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyAMMkwzgYkjXT6iKP0wVNT6HSUMAy9Imw0",
+
+authDomain: "sunyoung-erp-push.firebaseapp.com",
+
+projectId: "sunyoung-erp-push",
+
+storageBucket: "sunyoung-erp-push.firebasestorage.app",
+
+messagingSenderId: "1055876715145",
+
+appId: "1:1055876715145:web:f073ec7cef610fd830ac58"
+
+};
+
+
+
+const app = initializeApp(firebaseConfig);
+
+
+const messaging = getMessaging(app);
+
+
+
 
 if ("serviceWorker" in navigator) {
 
-    navigator.serviceWorker.register(
-        "/static/service-worker.js"
-    );
+
+navigator.serviceWorker.register(
+"/static/firebase-messaging-sw.js"
+)
+
+
+.then((registration)=>{
+
+
+getToken(
+messaging,
+{
+
+vapidKey:
+BFmstMNEcrrhSqTCLdRNHMMKkePydodZ8oFg_PECGWzg-9Mg37ILb2I_3pUPEmj1-UhzsGBNhf7mSeza4wc3g1g
+
+,
+serviceWorkerRegistration: registration
 
 }
 
+)
+
+.then((token)=>{
+
+
+if(token){
+
+
+console.log(
+"Firebase Push Token:",
+token
+);
+
+
+
+fetch("/save_push_token",{
+
+    method:"POST",
+
+    headers:{
+        "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify({
+
+        token:token
+
+    })
+
+})
+
+
+.then(response=>response.json())
+
+
+.then(data=>{
+
+
+    console.log(
+        "토큰 저장 결과:",
+        data
+    );
+
+
+})
+
+
+.catch(error=>{
+
+
+    console.log(
+        "토큰 저장 오류:",
+        error
+    );
+
+
+});
+
+
+}
+
+
+else{
+
+
+console.log(
+"푸시 권한 없음"
+);
+
+
+}
+
+
+});
+
+
+});
+
+
+}
+
+
+
 </script>
-
-</body>
-
-</html>

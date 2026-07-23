@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, send_file
+from flask import Flask, render_template, request, redirect, session, send_file, jsonify
 import psycopg2
 from datetime import datetime, timezone, timedelta
 import pandas as pd
@@ -8,44 +8,91 @@ import os
 app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
 
+# ==========================
+# Firebase Push 설정
+# ==========================
+
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+
+cred = credentials.Certificate(
+    "/etc/secrets/firebase_key.json"
+)
+
+firebase_admin.initialize_app(cred)
+
 KST = timezone(timedelta(hours=9))
 
 
 def now_korea():
 
     return datetime.now(KST)
-
+    
 # ==========================
-# 푸시 알림 함수 (추후 Firebase 연결)
+# 푸시 알림 함수
 # ==========================
-
 def send_push(role, message):
 
     conn = get_db()
     cur = conn.cursor()
 
+
     cur.execute("""
-    SELECT name, push_token
+    SELECT push_token
     FROM users
     WHERE role=%s
+    AND push_token IS NOT NULL
     """,
     (role,))
 
+
     users = cur.fetchall()
+
 
     conn.close()
 
 
+
     for user in users:
 
-        print(
-            "알림 대상:",
-            user[0],
-            message
-        )
-# ==========================
-# 개인 사용자 푸시 알림
-# ==========================
+
+        token = user[0]
+
+
+        try:
+
+            msg = messaging.Message(
+
+                notification=messaging.Notification(
+
+                    title="SUNYOUNG ERP",
+
+                    body=message
+
+                ),
+
+                token=token
+
+            )
+
+
+            response = messaging.send(msg)
+
+
+            print(
+                "푸시 성공:",
+                response
+            )
+
+
+        except Exception as e:
+
+
+            print(
+                "푸시 오류:",
+                e
+            )
 
 def send_push_user(name, message):
 
@@ -55,7 +102,7 @@ def send_push_user(name, message):
 
 
     cur.execute("""
-    SELECT name, push_token
+    SELECT push_token
     FROM users
     WHERE name=%s
     """,
@@ -68,13 +115,43 @@ def send_push_user(name, message):
     conn.close()
 
 
-    if user:
 
-        print(
-            "개인 알림 대상:",
-            user[0],
-            message
-        )
+    if user and user[0]:
+
+
+        try:
+
+            msg = messaging.Message(
+
+                notification=messaging.Notification(
+
+                    title="SUNYOUNG ERP",
+
+                    body=message
+
+                ),
+
+                token=user[0]
+
+            )
+
+
+            response = messaging.send(msg)
+
+
+            print(
+                "개인 푸시 성공:",
+                response
+            )
+
+
+        except Exception as e:
+
+            print(
+                "개인 푸시 오류:",
+                e
+            )
+
 # ==========================
 # DB 연결 (Supabase PostgreSQL)
 # ==========================
@@ -92,7 +169,51 @@ def get_db():
     )
 
     return conn
+# ==========================
+# Firebase Push Token 저장
+# ==========================
 
+@app.route("/save_push_token", methods=["POST"])
+def save_push_token():
+
+    if "id" not in session:
+        return jsonify({
+            "result":"login required"
+        })
+
+
+    data = request.get_json()
+
+    token = data.get("token")
+
+
+    conn = get_db()
+
+    cur = conn.cursor()
+
+
+    cur.execute("""
+    UPDATE users
+
+    SET push_token=%s
+
+    WHERE id=%s
+
+    """,
+    (
+        token,
+        session["id"]
+    ))
+
+
+    conn.commit()
+
+    conn.close()
+
+
+    return jsonify({
+        "result":"saved"
+    })
 # ==========================
 # DB 생성
 # ==========================
