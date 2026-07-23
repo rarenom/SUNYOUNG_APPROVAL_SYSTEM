@@ -27,7 +27,9 @@ self.addEventListener("push", function(event){
 
     console.log("푸시 데이터 수신");
 
+
     let data = {};
+
 
     if(event.data){
 
@@ -37,6 +39,7 @@ self.addEventListener("push", function(event){
 
 
     const title = data.title || "SUNYOUNG ERP";
+
 
     const options = {
 
@@ -53,6 +56,23 @@ self.addEventListener("push", function(event){
         }
 
     };
+
+
+    // ==========================
+    // 선영알림 음성
+    // ==========================
+
+    const utterance = new SpeechSynthesisUtterance(
+        "선영알림"
+    );
+
+
+    utterance.lang = "ko-KR";
+
+
+    speechSynthesis.speak(
+        utterance
+    );
 
 
     event.waitUntil(
