@@ -10,7 +10,7 @@ importScripts(
 
 firebase.initializeApp({
 
-apiKey: "AIzaSyAMMkwzgYkjXT6iKP0wVNT6HSUMAy9Imw0",
+apiKey: "AIzaSyAMMkwzgYkjXT6iKP0WvNT6HSUMAy9Imw0",
 
 authDomain: "sunyoung-erp-push.firebaseapp.com",
 
