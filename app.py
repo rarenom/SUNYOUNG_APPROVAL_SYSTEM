@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, send_file
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 import os
 
@@ -8,7 +8,12 @@ import os
 app = Flask(__name__)
 app.secret_key = "SUNYOUNG_SECRET_KEY"
 
+KST = timezone(timedelta(hours=9))
 
+
+def now_korea():
+
+    return datetime.now(KST)
 
 # ==========================
 # DB 연결 (Supabase PostgreSQL)
@@ -480,7 +485,10 @@ def leave():
 
         status,
 
-        datetime.now().strftime("%Y-%m-%d")
+
+        status,
+
+        now_korea().strftime("%Y-%m-%d")
 
         ))
 
@@ -560,10 +568,8 @@ def purchase():
 
         status,
 
-        datetime.now().strftime("%Y-%m-%d")
-
+        now_korea().strftime("%Y-%m-%d")
         ))
-
 
 
         conn.commit()
@@ -865,7 +871,7 @@ def get_next_status_by_role(role):
     # 공장장 승인 후
     if role=="공장장":
 
-        return "담당자 승인 대기"
+        return "담당자 확인 대기"
 
 
 
@@ -1043,9 +1049,7 @@ def approve(id,kind):
 
 
 
-    now=datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    now = now_korea().strftime("%Y-%m-%d %H:%M:%S")
 
 
 
@@ -1193,10 +1197,7 @@ def reject(id,kind):
     reason=request.form["reason"]
 
 
-    now=datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-
+    now = now_korea().strftime("%Y-%m-%d %H:%M:%S")
 
     reject_text = (
         session["role"]
@@ -1652,7 +1653,7 @@ def export_leave():
     filename = (
         "연차신청현황_"
         +
-        datetime.now().strftime("%Y%m%d")
+        now_korea().strftime("%Y%m%d_%H%M%S")
         +
         ".xlsx"
     )
@@ -1719,7 +1720,7 @@ def export_purchase():
     filename = (
         "구매요청현황_"
         +
-        datetime.now().strftime("%Y%m%d")
+        now_korea().strftime("%Y%m%d_%H%M%S")
         +
         ".xlsx"
     )
@@ -1765,7 +1766,7 @@ def backup_database():
     filename = (
         "SUNYOUNG_DB_BACKUP_"
         +
-        datetime.now().strftime("%Y%m%d")
+        now_korea().strftime("%Y%m%d_%H%M%S")
         +
         ".xlsx"
     )
