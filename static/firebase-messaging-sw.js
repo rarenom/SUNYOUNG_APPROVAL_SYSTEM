@@ -7,6 +7,7 @@ importScripts(
 );
 
 
+
 firebase.initializeApp({
 
     apiKey: "AIzaSyAMMkwzgYJXT6iKP0WvNT6HSUMAy9Imw0",
@@ -29,6 +30,10 @@ const messaging = firebase.messaging();
 
 
 
+// ==========================
+// 백그라운드 푸시 수신
+// ==========================
+
 messaging.onBackgroundMessage(function(payload){
 
 
@@ -38,40 +43,41 @@ messaging.onBackgroundMessage(function(payload){
     );
 
 
-    const notificationTitle =
+
+    const title =
+
         payload.data?.title
-        || "SUNYOUNG ERP";
+
+        ||
+
+        "SUNYOUNG ERP";
 
 
 
-    const notificationOptions = {
+
+    const options = {
 
 
         body:
+
         payload.data?.body
-        || "새로운 알림이 있습니다.",
+
+        ||
+
+        "새로운 알림이 있습니다.",
 
 
 
         icon:
+
         "https://sunyoung-approval-system.onrender.com/static/icon.png",
 
 
 
         badge:
+
         "https://sunyoung-approval-system.onrender.com/static/icon.png",
 
-
-
-        data:{
-
-            url:
-            "https://sunyoung-approval-system.onrender.com"
-
-        },
-
-
-        requireInteraction:false,
 
 
         vibrate:[
@@ -80,7 +86,20 @@ messaging.onBackgroundMessage(function(payload){
             100,
             200
 
-        ]
+        ],
+
+
+
+        data:{
+
+
+            url:
+
+            "https://sunyoung-approval-system.onrender.com/main"
+
+
+        }
+
 
     };
 
@@ -88,9 +107,9 @@ messaging.onBackgroundMessage(function(payload){
 
     self.registration.showNotification(
 
-        notificationTitle,
+        title,
 
-        notificationOptions
+        options
 
     );
 
@@ -100,12 +119,20 @@ messaging.onBackgroundMessage(function(payload){
 
 
 
+// ==========================
+// 알림 클릭
+// ==========================
 
 self.addEventListener(
 
 "notificationclick",
 
 function(event){
+
+
+    console.log(
+        "알림 클릭"
+    );
 
 
     event.notification.close();
@@ -122,6 +149,7 @@ function(event){
             includeUncontrolled:true
 
         })
+
 
         .then(function(clientList){
 
@@ -141,9 +169,7 @@ function(event){
 
                     return client.focus();
 
-
                 }
-
 
             }
 
@@ -156,10 +182,10 @@ function(event){
             );
 
 
-
         })
 
     );
+
 
 }
 

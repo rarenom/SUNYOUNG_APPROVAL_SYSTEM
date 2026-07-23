@@ -55,42 +55,62 @@ def send_push(role, message):
 
             msg = messaging.Message(
 
-                notification=messaging.Notification(
-                    title="SUNYOUNG ERP",
-                    body=message
-                ),
+            notification=messaging.Notification(
+                title="SUNYOUNG ERP",
+                body=message
+            ),
 
-                data={
-                    "title": "SUNYOUNG ERP",
-                    "body": message
+
+            data={
+                "title": "SUNYOUNG ERP",
+                "body": message
+            },
+
+
+            # ==========================
+            # 안드로이드 기본 알림음
+            # ==========================
+
+            ndroid=messaging.AndroidConfig(
+
+                priority="high",
+
+                notification=messaging.AndroidNotification(
+
+                    sound="default"
+
+                )
+
+            ),
+
+
+
+            webpush=messaging.WebpushConfig(
+
+                headers={
+
+                    "Urgency":"high"
+
                 },
 
-                android=messaging.AndroidConfig(
-                    priority="high"
-                ),
 
-                webpush=messaging.WebpushConfig(
+                notification=messaging.WebpushNotification(
 
-                    headers={
-                        "Urgency":"high"
-                    },
+                    itle="SUNYOUNG ERP",
 
-                    notification=messaging.WebpushNotification(
+                    body=message,
 
-                        title="SUNYOUNG ERP",
+                    icon="/static/icon.png",
 
-                        body=message,
+                    badge="/static/icon.png"
 
-                        icon="/static/icon.png",
+                )
 
-                        badge="/static/icon.png"
+            ),
 
-                    )
 
-                ),
-
-                token=token
-            )
+            token=token
+        )
 
             response = messaging.send(msg)
 
@@ -135,7 +155,15 @@ def send_push_user(name, message):
                 },
 
                 android=messaging.AndroidConfig(
-                    priority="high"
+
+                    priority="high",
+
+                    notification=messaging.AndroidNotification(
+
+                        sound="default"
+
+                    )
+
                 ),
 
                 webpush=messaging.WebpushConfig(
