@@ -70,11 +70,23 @@ def send_push(role, message):
                 ),
 
                 webpush=messaging.WebpushConfig(
-                    notification={
-                        "title": "SUNYOUNG ERP",
-                        "body": message,
-                        "icon": "/static/icon.png"
-                    }
+
+                    headers={
+                        "Urgency":"high"
+                    },
+
+                    notification=messaging.WebpushNotification(
+
+                        title="SUNYOUNG ERP",
+
+                        body=message,
+
+                        icon="/static/icon.png",
+
+                        badge="/static/icon.png"
+
+                    )
+
                 ),
 
                 token=token

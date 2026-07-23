@@ -28,17 +28,22 @@ messaging.onBackgroundMessage(function(payload){
 
     console.log("백그라운드 메시지:", payload);
 
+
     self.registration.showNotification(
 
-        payload.notification?.title || "SUNYOUNG ERP",
+        payload.notification.title || "SUNYOUNG ERP",
 
         {
 
-            body: payload.notification?.body || "",
+            body: payload.notification.body || "",
 
             icon: "/static/icon.png",
 
-            badge: "/static/icon.png"
+            badge: "/static/icon.png",
+
+            data:{
+                url:"/"
+            }
 
         }
 
