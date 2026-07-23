@@ -2270,6 +2270,21 @@ def restore_database():
     </form>
     """
 
+@app.route("/test_push")
+def test_push():
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    send_push_user(
+        session["name"],
+        "테스트 푸시 알림입니다."
+    )
+
+
+    return "푸시 전송 완료"
+    
 # ==========================
 # 로그아웃
 # ==========================
