@@ -802,7 +802,7 @@ def approval_status():
     WHERE status IN
     (
     '공장장 승인 대기',
-    '담당자 승인 대기',
+    '담당자 확인 대기',
     '대표 승인 대기',
     '최종 승인 완료'
     )
@@ -969,13 +969,13 @@ def approve(id,kind):
 
 
 
-    if role=="담당자" and current_status!="담당자 승인 대기":
+    if role=="담당자" and current_status!="담당자 확인 대기":
 
         conn.close()
 
         return """
         <script>
-        alert('현재 담당자 승인 차례가 아닙니다.');
+        alert('현재 담당자 확인 차례가 아닙니다.');
         history.back();
         </script>
         """
