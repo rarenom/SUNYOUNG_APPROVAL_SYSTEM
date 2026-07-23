@@ -127,12 +127,12 @@ def send_push_user(name, message):
                 ),
 
                 webpush=messaging.WebpushConfig(
-                    notification={
-                        "title": "SUNYOUNG ERP",
-                        "body": message,
-                        "icon": "/static/icon.png"
-                    }
-                ),
+                    notification=messaging.WebpushNotification(
+                    title="SUNYOUNG ERP",
+                    body=message,
+                    icon="/static/icon.png"
+                    )
+                ),   
 
                 token=user[0]
             )
