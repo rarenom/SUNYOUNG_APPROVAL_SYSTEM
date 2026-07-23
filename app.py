@@ -1641,6 +1641,7 @@ def reject(id,kind):
 
     return redirect("/approval")
 
+
 # ==========================
 # 공지사항 관리
 # ==========================
@@ -1656,14 +1657,18 @@ def notice_manage():
         return "권한 없음"
 
 
-    conn=get_db()
 
-    cur=conn.cursor()
+    conn = get_db()
+
+    cur = conn.cursor()
 
 
-    # 등록
 
-    if request.method=="POST":
+    # ==========================
+    # 공지 등록
+    # ==========================
+
+    if request.method == "POST":
 
 
         cur.execute("""
@@ -1688,8 +1693,10 @@ def notice_manage():
 
         conn.commit()
 
+
+
         # ==========================
-        # 공지사항 전체 직원 푸시
+        # 전체 사용자 공지 푸시
         # ==========================
 
         send_notice_push(
@@ -1697,7 +1704,35 @@ def notice_manage():
             + request.form["title"]
         )
 
-        # ==========================
+
+
+    # ==========================
+    # 공지 목록 조회
+    # ==========================
+
+    cur.execute("""
+    SELECT *
+    FROM notice
+    ORDER BY important DESC,id DESC
+    """)
+
+
+    notices = cur.fetchall()
+
+
+    conn.close()
+
+
+
+    return render_template(
+        "notice_manage.html",
+        notices=notices
+    )
+
+
+
+
+# ==========================
 # 전체 사용자 공지 푸시
 # ==========================
 
@@ -1709,6 +1744,7 @@ def send_notice_push(message):
     cur = conn.cursor()
 
 
+
     cur.execute("""
     SELECT push_token
     FROM users
@@ -1716,7 +1752,9 @@ def send_notice_push(message):
     """)
 
 
+
     users = cur.fetchall()
+
 
 
     conn.close()
@@ -1735,7 +1773,8 @@ def send_notice_push(message):
             msg = messaging.Message(
 
 
-                notification=messaging.Notification(
+
+                notification = messaging.Notification(
 
                     title="SUNYOUNG 공지사항",
 
@@ -1755,7 +1794,7 @@ def send_notice_push(message):
 
 
 
-                android=messaging.AndroidConfig(
+                android = messaging.AndroidConfig(
 
                     priority="high",
 
@@ -1769,7 +1808,7 @@ def send_notice_push(message):
 
 
 
-                webpush=messaging.WebpushConfig(
+                webpush = messaging.WebpushConfig(
 
                     headers={
 
@@ -1793,12 +1832,15 @@ def send_notice_push(message):
                 ),
 
 
+
                 token=token
 
             )
 
 
+
             response = messaging.send(msg)
+
 
 
             print(
@@ -1807,35 +1849,14 @@ def send_notice_push(message):
             )
 
 
+
         except Exception as e:
 
 
             print(
                 "공지 푸시 오류:",
                 e
-            )
-
-
-
-    cur.execute("""
-    SELECT *
-    FROM notice
-    ORDER BY important DESC,id DESC
-    """)
-
-
-    notices=cur.fetchall()
-
-
-    conn.close()
-
-
-    return render_template(
-        "notice_manage.html",
-        notices=notices
-    )
-
-
+            )       
 
 # ==========================
 # 공지 수정
