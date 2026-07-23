@@ -384,7 +384,7 @@ def init_db():
             "4715",
             "이재우",
             "직원",
-            1,
+            0,
             1
         ),
 
@@ -402,8 +402,8 @@ def init_db():
             "2266",
             "박용현",
             "담당자",
-            1,
-            1
+            0,
+            0
         ),
 
         (
@@ -411,8 +411,8 @@ def init_db():
             "5102",
             "남영진",
             "대표",
-            1,
-            1
+            0,
+            0
         )
 
     ]
@@ -544,7 +544,21 @@ def main():
 
 
 
+# ==========================
+# 현재 상태 기준 다음 승인자 찾기
+# ==========================
+def get_next_approver(status):
 
+    if status=="공장장 승인 대기":
+        return "공장장"
+
+    elif status=="담당자 확인 대기":
+        return "담당자"
+
+    elif status=="대표 승인 대기":
+        return "대표"
+
+    return None
 
 # ==========================
 # 승인 단계 확인 함수
@@ -676,25 +690,15 @@ def leave():
         conn.commit()   
 
 
-        # 첫 승인자 알림
-        if status=="공장장 승인 대기":
+        # 첫 승인자 푸시
+
+        approver = get_next_approver(status)
+
+
+        if approver:
 
             send_push(
-                "공장장",
-                "새로운 연차 신청이 있습니다."
-            )
-
-        elif status=="담당자 확인 대기":
-
-            send_push(
-                "담당자",
-                "새로운 연차 신청이 있습니다."
-            )
-
-        else:
-
-            send_push(
-                "대표",
+                approver,
                 "새로운 연차 신청이 있습니다."
             )
 
@@ -777,28 +781,17 @@ def purchase():
 
         conn.commit()
 
+        # 첫 승인자 푸시
 
-        if status=="공장장 승인 대기":
+        approver = get_next_approver(status)
 
-            send_push(
-                "공장장",
-                "새로운 구매 요청이 있습니다."
-            )
 
-        elif status=="담당자 확인 대기":
+        if approver:
 
             send_push(
-                "담당자",
+                approver,
                 "새로운 구매 요청이 있습니다."
             )
-
-        else:
-
-            send_push(
-                "대표",
-                "새로운 구매 요청이 있습니다."
-            )
-
 
         conn.close()
 
@@ -1394,26 +1387,24 @@ def approve(id,kind):
     conn.commit()
 
 
-    # 다음 승인자 알림
+    # 다음 결재자 푸시
 
-    if next_status=="담당자 확인 대기":
+    approver = get_next_approver(next_status)
+
+
+    if approver:
+
 
         send_push(
-            "담당자",
+            approver,
             "승인 확인 요청이 있습니다."
         )
 
 
-    elif next_status=="대표 승인 대기":
-
-        send_push(
-            "대표",
-            "최종 승인 요청이 있습니다."
-        )
+    else:
 
 
-    elif next_status=="최종 승인 완료":
-
+        # 최종 승인 완료
         send_push_user(
             applicant,
             "신청이 최종 승인되었습니다."
