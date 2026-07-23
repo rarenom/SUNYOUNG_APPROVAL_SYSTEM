@@ -486,8 +486,6 @@ def leave():
         status,
 
 
-        status,
-
         now_korea().strftime("%Y-%m-%d")
 
         ))
