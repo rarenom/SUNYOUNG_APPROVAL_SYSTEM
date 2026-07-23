@@ -99,6 +99,69 @@ body{
 }
 
 
+/* ========================== */
+/* 공지사항 박스 */
+/* ========================== */
+
+.notice-box{
+
+    background:white;
+
+    border-radius:15px;
+
+    padding:20px;
+
+    margin-bottom:25px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+.notice-title{
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    color:#0f172a;
+
+    border-bottom:2px solid #e2e8f0;
+
+    padding-bottom:10px;
+
+    margin-bottom:15px;
+
+}
+
+
+.notice-item{
+
+    background:#f8fafc;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    margin-bottom:10px;
+
+    font-size:16px;
+
+    color:#334155;
+
+}
+
+
+.notice-date{
+
+    margin-top:5px;
+
+    font-size:12px;
+
+    color:#64748b;
+
+}
+
 
 .info{
 
@@ -525,6 +588,7 @@ SUNYOUNG 전자결재 SYSTEM
 {% endif %}
 
 
+
 <!-- 전체 결재 진행 현황 -->
 
 {% if role in ["담당자","대표"] %}
@@ -540,6 +604,25 @@ SUNYOUNG 전자결재 SYSTEM
 </a>
 
 {% endif %}
+
+
+
+<!-- 공지사항 관리 -->
+
+{% if role in ["담당자","대표"] %}
+
+<a href="/notice_manage">
+
+<button class="manage">
+
+📢 공지사항 관리
+
+</button>
+
+</a>
+
+{% endif %}
+
 
 <!-- DB 백업 / 복원 담당자 / 대표 -->
 

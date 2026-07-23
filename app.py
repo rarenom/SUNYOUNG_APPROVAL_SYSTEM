@@ -1656,14 +1656,14 @@ def notice_manage():
         return "권한 없음"
 
 
+    conn=get_db()
 
-    conn = get_db()
-
-    cur = conn.cursor()
-
+    cur=conn.cursor()
 
 
-    if request.method == "POST":
+    # 등록
+
+    if request.method=="POST":
 
 
         cur.execute("""
@@ -1688,16 +1688,222 @@ def notice_manage():
 
         conn.commit()
 
+        # ==========================
+        # 공지사항 전체 직원 푸시
+        # ==========================
+
+        send_notice_push(
+            "새로운 공지사항이 등록되었습니다.\n\n"
+            + request.form["title"]
+        )
+
+        # ==========================
+# 전체 사용자 공지 푸시
+# ==========================
+
+def send_notice_push(message):
+
+
+    conn = get_db()
+
+    cur = conn.cursor()
+
+
+    cur.execute("""
+    SELECT push_token
+    FROM users
+    WHERE push_token IS NOT NULL
+    """)
+
+
+    users = cur.fetchall()
+
+
+    conn.close()
+
+
+
+    for user in users:
+
+
+        token = user[0]
+
+
+        try:
+
+
+            msg = messaging.Message(
+
+
+                notification=messaging.Notification(
+
+                    title="SUNYOUNG 공지사항",
+
+                    body=message
+
+                ),
+
+
+
+                data={
+
+                    "title":"SUNYOUNG 공지사항",
+
+                    "body":message
+
+                },
+
+
+
+                android=messaging.AndroidConfig(
+
+                    priority="high",
+
+                    notification=messaging.AndroidNotification(
+
+                        sound="default"
+
+                    )
+
+                ),
+
+
+
+                webpush=messaging.WebpushConfig(
+
+                    headers={
+
+                        "Urgency":"high"
+
+                    },
+
+
+                    notification=messaging.WebpushNotification(
+
+                        title="SUNYOUNG 공지사항",
+
+                        body=message,
+
+                        icon="/static/icon.png",
+
+                        badge="/static/icon.png"
+
+                    )
+
+                ),
+
+
+                token=token
+
+            )
+
+
+            response = messaging.send(msg)
+
+
+            print(
+                "공지 푸시 성공:",
+                response
+            )
+
+
+        except Exception as e:
+
+
+            print(
+                "공지 푸시 오류:",
+                e
+            )
+
 
 
     cur.execute("""
     SELECT *
     FROM notice
-    ORDER BY important DESC, id DESC
+    ORDER BY important DESC,id DESC
     """)
 
 
-    notices = cur.fetchall()
+    notices=cur.fetchall()
+
+
+    conn.close()
+
+
+    return render_template(
+        "notice_manage.html",
+        notices=notices
+    )
+
+
+
+# ==========================
+# 공지 수정
+# ==========================
+
+@app.route("/notice_edit/<int:id>", methods=["GET","POST"])
+def notice_edit(id):
+
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    if session["role"] not in ["담당자","대표"]:
+        return "권한 없음"
+
+
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    if request.method=="POST":
+
+
+        cur.execute("""
+        UPDATE notice
+
+        SET
+
+        title=%s,
+
+        content=%s,
+
+        important=%s
+
+        WHERE id=%s
+
+        """,
+        (
+            request.form["title"],
+            request.form["content"],
+            request.form.get("important","0"),
+            id
+        ))
+
+
+        conn.commit()
+
+
+        conn.close()
+
+
+        return redirect("/notice_manage")
+
+
+
+    cur.execute("""
+    SELECT *
+    FROM notice
+    WHERE id=%s
+    """,
+    (id,))
+
+
+    notice=cur.fetchone()
 
 
     conn.close()
@@ -1705,9 +1911,48 @@ def notice_manage():
 
 
     return render_template(
-        "notice_manage.html",
-        notices=notices
+        "notice_edit.html",
+        notice=notice
     )
+
+
+
+# ==========================
+# 공지 삭제
+# ==========================
+
+@app.route("/notice_delete/<int:id>")
+def notice_delete(id):
+
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    if session["role"] not in ["담당자","대표"]:
+        return "권한 없음"
+
+
+
+    conn=get_db()
+
+    cur=conn.cursor()
+
+
+
+    cur.execute("""
+    DELETE FROM notice
+    WHERE id=%s
+    """,
+    (id,))
+
+
+    conn.commit()
+
+    conn.close()
+
+
+    return redirect("/notice_manage")
 
 # ==========================
 # 직원 관리
