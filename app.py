@@ -71,7 +71,7 @@ def send_push(role, message):
             # 안드로이드 기본 알림음
             # ==========================
 
-            ndroid=messaging.AndroidConfig(
+            android=messaging.AndroidConfig(
 
                 priority="high",
 
@@ -96,7 +96,7 @@ def send_push(role, message):
 
                 notification=messaging.WebpushNotification(
 
-                    itle="SUNYOUNG ERP",
+                    title="SUNYOUNG ERP",
 
                     body=message,
 
@@ -461,6 +461,28 @@ def init_db():
         DO NOTHING
         """, user)
 
+    # ==========================
+    # 공지사항 테이블 추가
+    # ==========================
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS notice(
+
+        id SERIAL PRIMARY KEY,
+
+        title TEXT NOT NULL,
+
+        content TEXT NOT NULL,
+
+        writer TEXT,
+
+        important INTEGER DEFAULT 0,
+
+        reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -546,8 +568,6 @@ def login():
     )
 
 
-
-
 # ==========================
 # 메인
 # ==========================
@@ -560,17 +580,35 @@ def main():
         return redirect("/login")
 
 
+    conn = get_db()
+
+    cur = conn.cursor()
+
+
+    cur.execute("""
+    SELECT *
+    FROM notice
+    ORDER BY important DESC, id DESC
+    """)
+
+
+    notices = cur.fetchall()
+
+
+    conn.close()
+
+
     return render_template(
 
         "main.html",
 
         name=session["name"],
 
-        role=session["role"]
+        role=session["role"],
+
+        notices=notices
 
     )
-
-
 
 # ==========================
 # 현재 상태 기준 다음 승인자 찾기
