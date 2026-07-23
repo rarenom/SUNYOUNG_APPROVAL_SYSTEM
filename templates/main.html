@@ -516,7 +516,7 @@ style="margin-top:10px;"
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAMMkwzgYkjXT6iKP0WvNT6HSUMAy9Imw0",
@@ -529,6 +529,26 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
+
+// 앱이 실행 중일 때 알림 표시
+onMessage(messaging, (payload) => {
+
+    console.log("Foreground Message:", payload);
+
+    if (Notification.permission === "granted") {
+
+        new Notification(
+            payload.notification.title,
+            {
+                body: payload.notification.body,
+                icon: "/static/icon.png"
+            }
+        );
+
+    }
+
+});
+
 
 if ("serviceWorker" in navigator) {
 

@@ -6,8 +6,6 @@ importScripts(
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"
 );
 
-
-
 firebase.initializeApp({
 
 apiKey: "AIzaSyAMMkwzgYkjXT6iKP0WvNT6HSUMAy9Imw0",
@@ -24,41 +22,39 @@ appId: "1:1055876715145:web:f073ec7cef610fd830ac58"
 
 });
 
-
-
 const messaging = firebase.messaging();
 
+messaging.onBackgroundMessage(function(payload){
+
+    console.log("백그라운드 메시지:", payload);
+
+    self.registration.showNotification(
+
+        payload.notification?.title || "SUNYOUNG ERP",
+
+        {
+
+            body: payload.notification?.body || "",
+
+            icon: "/static/icon.png",
+
+            badge: "/static/icon.png"
+
+        }
+
+    );
+
+});
 
 
-messaging.onBackgroundMessage(
-function(payload) {
+self.addEventListener("notificationclick", function(event){
 
+    event.notification.close();
 
-console.log(
-"백그라운드 메시지:",
-payload
-);
+    event.waitUntil(
 
+        clients.openWindow("/")
 
-const notificationTitle =
-payload.notification.title;
-
-
-const notificationOptions = {
-
-body:
-payload.notification.body,
-
-icon:
-"/static/icon.png"
-
-};
-
-
-self.registration.showNotification(
-notificationTitle,
-notificationOptions
-);
-
+    );
 
 });

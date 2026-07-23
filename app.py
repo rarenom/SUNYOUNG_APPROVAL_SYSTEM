@@ -37,120 +37,113 @@ def send_push(role, message):
     conn = get_db()
     cur = conn.cursor()
 
-
     cur.execute("""
     SELECT push_token
     FROM users
     WHERE role=%s
     AND push_token IS NOT NULL
-    """,
-    (role,))
-
+    """, (role,))
 
     users = cur.fetchall()
-
-
     conn.close()
-
-
 
     for user in users:
 
-
         token = user[0]
-
 
         try:
 
             msg = messaging.Message(
 
                 notification=messaging.Notification(
-
                     title="SUNYOUNG ERP",
-
                     body=message
+                ),
 
+                data={
+                    "title": "SUNYOUNG ERP",
+                    "body": message
+                },
+
+                android=messaging.AndroidConfig(
+                    priority="high"
+                ),
+
+                webpush=messaging.WebpushConfig(
+                    notification={
+                        "title": "SUNYOUNG ERP",
+                        "body": message,
+                        "icon": "/static/icon.png"
+                    }
                 ),
 
                 token=token
-
             )
-
 
             response = messaging.send(msg)
 
-
-            print(
-                "푸시 성공:",
-                response
-            )
-
+            print("푸시 성공:", response)
 
         except Exception as e:
 
+            print("푸시 오류:", e)
 
-            print(
-                "푸시 오류:",
-                e
-            )
 
+# ==========================
+# 개인 푸시
+# ==========================
 def send_push_user(name, message):
 
     conn = get_db()
-
     cur = conn.cursor()
-
 
     cur.execute("""
     SELECT push_token
     FROM users
     WHERE name=%s
-    """,
-    (name,))
-
+    """, (name,))
 
     user = cur.fetchone()
-
-
     conn.close()
 
-
-
     if user and user[0]:
-
 
         try:
 
             msg = messaging.Message(
 
                 notification=messaging.Notification(
-
                     title="SUNYOUNG ERP",
-
                     body=message
+                ),
 
+                data={
+                    "title": "SUNYOUNG ERP",
+                    "body": message
+                },
+
+                android=messaging.AndroidConfig(
+                    priority="high"
+                ),
+
+                webpush=messaging.WebpushConfig(
+                    notification={
+                        "title": "SUNYOUNG ERP",
+                        "body": message,
+                        "icon": "/static/icon.png"
+                    }
                 ),
 
                 token=user[0]
-
             )
-
 
             response = messaging.send(msg)
 
-
-            print(
-                "개인 푸시 성공:",
-                response
-            )
-
+            print("개인 푸시 성공:", response)
 
         except Exception as e:
 
-            print(
-                "개인 푸시 오류:",
-                e
-            )
+            print("개인 푸시 오류:", e)
 
 # ==========================
 # DB 연결 (Supabase PostgreSQL)
