@@ -16,6 +16,66 @@ def now_korea():
     return datetime.now(KST)
 
 # ==========================
+# 푸시 알림 함수 (추후 Firebase 연결)
+# ==========================
+
+def send_push(role, message):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT name, push_token
+    FROM users
+    WHERE role=%s
+    """,
+    (role,))
+
+    users = cur.fetchall()
+
+    conn.close()
+
+
+    for user in users:
+
+        print(
+            "알림 대상:",
+            user[0],
+            message
+        )
+# ==========================
+# 개인 사용자 푸시 알림
+# ==========================
+
+def send_push_user(name, message):
+
+    conn = get_db()
+
+    cur = conn.cursor()
+
+
+    cur.execute("""
+    SELECT name, push_token
+    FROM users
+    WHERE name=%s
+    """,
+    (name,))
+
+
+    user = cur.fetchone()
+
+
+    conn.close()
+
+
+    if user:
+
+        print(
+            "개인 알림 대상:",
+            user[0],
+            message
+        )
+# ==========================
 # DB 연결 (Supabase PostgreSQL)
 # ==========================
 
@@ -181,6 +241,13 @@ def init_db():
     except:
         pass
 
+    try:
+        cur.execute("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS push_token TEXT
+        """)
+    except:
+        pass
 
     # 기본 사용자
 
@@ -271,10 +338,7 @@ def login():
         conn = get_db()
         cur = conn.cursor()
 
-        # DB 전체 사용자 확인
-        cur.execute("SELECT * FROM users")
-        print("전체 사용자 :", cur.fetchall())
-
+        
         cur.execute("""
         SELECT *
         FROM users
@@ -287,15 +351,6 @@ def login():
 
 
         user = cur.fetchone()
-
-
-        # Render 로그 확인용
-        print("====================")
-        print("로그인 입력 ID :", user_id)
-        print("로그인 입력 PW :", password)
-        print("DB 검색 결과 :", user)
-        print("====================")
-
 
         conn.close()
 
@@ -492,7 +547,31 @@ def leave():
 
 
 
-        conn.commit()
+        conn.commit()   
+
+
+        # 첫 승인자 알림
+        if status=="공장장 승인 대기":
+
+            send_push(
+                "공장장",
+                "새로운 연차 신청이 있습니다."
+            )
+
+        elif status=="담당자 확인 대기":
+
+            send_push(
+                "담당자",
+                "새로운 연차 신청이 있습니다."
+            )
+
+        else:
+
+            send_push(
+                "대표",
+                "새로운 연차 신청이 있습니다."
+            )
+
 
         conn.close()
 
@@ -572,8 +651,30 @@ def purchase():
 
         conn.commit()
 
-        conn.close()
 
+        if status=="공장장 승인 대기":
+
+            send_push(
+                "공장장",
+                "새로운 구매 요청이 있습니다."
+            )
+
+        elif status=="담당자 확인 대기":
+
+            send_push(
+                "담당자",
+                "새로운 구매 요청이 있습니다."
+            )
+
+        else:
+
+            send_push(
+                "대표",
+                "새로운 구매 요청이 있습니다."
+            )
+
+
+        conn.close()
 
 
         return redirect("/my_request")
@@ -829,7 +930,7 @@ def approval_status():
     WHERE status IN
     (
     '공장장 승인 대기',
-    '담당자 승인 대기',
+    '담당자 확인 대기',
     '대표 승인 대기',
     '최종 승인 완료'
     )
@@ -873,7 +974,7 @@ def get_next_status_by_role(role):
 
 
 
-    # 담당자 승인 후
+    # 담당자 확인 후
     elif role=="담당자":
 
         return "대표 승인 대기"
@@ -1166,8 +1267,34 @@ def approve(id,kind):
 
     conn.commit()
 
-    conn.close()
 
+    # 다음 승인자 알림
+
+    if next_status=="담당자 확인 대기":
+
+        send_push(
+            "담당자",
+            "승인 확인 요청이 있습니다."
+        )
+
+
+    elif next_status=="대표 승인 대기":
+
+        send_push(
+            "대표",
+            "최종 승인 요청이 있습니다."
+        )
+
+
+    elif next_status=="최종 승인 완료":
+
+        send_push_user(
+            applicant,
+            "신청이 최종 승인되었습니다."
+        )
+
+
+    conn.close()
 
 
     return redirect("/approval")
@@ -1213,6 +1340,42 @@ def reject(id,kind):
 
     conn=get_db()
     cur=conn.cursor()
+
+
+    # ==========================
+    # 신청자 확인
+    # ==========================
+
+    if kind=="leave":
+
+        cur.execute("""
+        SELECT applicant
+        FROM leave_request
+        WHERE id=%s
+        """,
+        (id,))
+
+    else:
+
+        cur.execute("""
+        SELECT applicant
+        FROM purchase_request
+        WHERE id=%s
+        """,
+        (id,))
+
+
+    applicant_row = cur.fetchone()
+
+
+    if not applicant_row:
+
+        conn.close()
+
+        return "신청자 없음"
+
+
+    applicant = applicant_row[0]
 
 
     if kind=="leave":
@@ -1283,8 +1446,15 @@ def reject(id,kind):
 
 
     conn.commit()
-    conn.close()
 
+
+    send_push_user(
+        applicant,
+        "신청이 반려되었습니다."
+    )
+
+
+    conn.close()
 
     return redirect("/approval")
 
