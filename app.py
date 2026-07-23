@@ -1640,6 +1640,62 @@ def reject(id,kind):
     conn.close()
 
     return redirect("/approval")
+# ==========================
+# 공지사항 관리
+# ==========================
+
+@app.route("/notice_manage", methods=["GET","POST"])
+def notice_manage():
+
+    if "id" not in session:
+        return redirect("/login")
+
+
+    if session["role"] not in ["담당자","대표"]:
+        return "권한 없음"
+
+
+    conn=get_db()
+    cur=conn.cursor()
+
+
+    if request.method=="POST":
+
+        cur.execute("""
+        INSERT INTO notice
+        (
+            title,
+            content,
+            writer,
+            important
+        )
+        VALUES(%s,%s,%s,%s)
+        """,
+        (
+            request.form["title"],
+            request.form["content"],
+            session["name"],
+            request.form.get("important","0")
+        ))
+
+        conn.commit()
+
+
+    cur.execute("""
+    SELECT *
+    FROM notice
+    ORDER BY important DESC,id DESC
+    """)
+
+    notices=cur.fetchall()
+
+    conn.close()
+
+
+    return render_template(
+        "notice_manage.html",
+        notices=notices
+    )
 
 # ==========================
 # 직원 관리

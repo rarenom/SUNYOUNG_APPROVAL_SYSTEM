@@ -328,7 +328,70 @@ SUNYOUNG 전자결재 SYSTEM
 
 </div>
 
+<!-- ========================== -->
+<!-- 공지사항 -->
+<!-- ========================== -->
 
+<div class="notice-box">
+
+
+<div class="notice-title">
+
+📢 공지사항
+
+</div>
+
+
+{% if notices %}
+
+
+{% for notice in notices %}
+
+
+<div class="notice-item">
+
+
+{% if notice[4] == 1 %}
+
+🔴
+
+{% else %}
+
+📌
+
+{% endif %}
+
+
+{{ notice[1] }}
+
+
+<div class="notice-date">
+
+{{ notice[5] }}
+
+</div>
+
+
+</div>
+
+
+{% endfor %}
+
+
+{% else %}
+
+
+<div class="notice-item">
+
+등록된 공지사항이 없습니다.
+
+</div>
+
+
+{% endif %}
+
+
+</div>
 
 
 

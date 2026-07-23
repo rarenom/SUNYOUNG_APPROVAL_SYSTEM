@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+공지사항 관리
+</title>
+
+
+<style>
+
+body{
+
+font-family:"맑은 고딕";
+
+background:#f5f7fb;
+
+padding:20px;
+
+}
+
+
+.box{
+
+background:white;
+
+padding:20px;
+
+border-radius:15px;
+
+margin-bottom:20px;
+
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+
+}
+
+
+input, textarea{
+
+width:100%;
+
+padding:12px;
+
+margin-top:10px;
+
+border-radius:8px;
+
+border:1px solid #ddd;
+
+font-size:16px;
+
+}
+
+
+textarea{
+
+height:120px;
+
+}
+
+
+button{
+
+width:100%;
+
+height:55px;
+
+margin-top:15px;
+
+border:none;
+
+border-radius:10px;
+
+background:#9333ea;
+
+color:white;
+
+font-size:18px;
+
+font-weight:bold;
+
+}
+
+
+.notice{
+
+background:#f8fafc;
+
+padding:15px;
+
+border-radius:10px;
+
+margin-top:10px;
+
+}
+
+
+.date{
+
+font-size:13px;
+
+color:#64748b;
+
+}
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<h2>
+📢 공지사항 관리
+</h2>
+
+
+
+<div class="box">
+
+
+<form method="post">
+
+
+<input
+type="text"
+name="title"
+placeholder="공지 제목"
+required>
+
+
+
+<textarea
+name="content"
+placeholder="공지 내용"
+required></textarea>
+
+
+
+<label>
+
+<input
+type="checkbox"
+name="important"
+value="1">
+
+중요 공지
+
+</label>
+
+
+
+<button type="submit">
+
+공지 등록
+
+</button>
+
+
+</form>
+
+
+</div>
+
+
+
+
+
+<div class="box">
+
+
+<h3>
+등록된 공지
+</h3>
+
+
+{% for notice in notices %}
+
+
+<div class="notice">
+
+
+{% if notice[4] == 1 %}
+
+🔴
+
+{% else %}
+
+📌
+
+{% endif %}
+
+
+<b>
+{{ notice[1] }}
+</b>
+
+
+<br>
+
+
+{{ notice[2] }}
+
+
+<br>
+
+
+<div class="date">
+
+작성자 : {{ notice[3] }}
+
+<br>
+
+등록일 : {{ notice[5] }}
+
+</div>
+
+
+</div>
+
+
+{% else %}
+
+
+등록된 공지가 없습니다.
+
+
+{% endfor %}
+
+
+
+</div>
+
+
+
+<a href="/main">
+
+<button>
+
+메인으로
+
+</button>
+
+</a>
+
+
+
+</body>
+
+</html>
