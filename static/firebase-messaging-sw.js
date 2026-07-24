@@ -7,7 +7,6 @@ importScripts(
 );
 
 
-
 firebase.initializeApp({
 
     apiKey: "AIzaSyAMMkwzgYJXT6iKP0WvNT6HSUMAy9Imw0",
@@ -25,77 +24,16 @@ firebase.initializeApp({
 });
 
 
-
 const messaging = firebase.messaging();
 
 
 
 // ==========================
-// 백그라운드 푸시 수신
-// ==========================
-
-importScripts(
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"
-);
-
-importScripts(
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"
-);
-
-
-
-firebase.initializeApp({
-
-    apiKey: "AIzaSyAMMkwzgYJXT6iKP0WvNT6HSUMAy9Imw0",
-
-    authDomain: "sunyoung-erp-push.firebaseapp.com",
-
-    projectId: "sunyoung-erp-push",
-
-    storageBucket: "sunyoung-erp-push.firebasestorage.app",
-
-    messagingSenderId: "1055876715145",
-
-    appId: "1:1055876715145:web:f073ec7cef610fd830ac58"
-
-});
-
-
-
-const messaging = firebase.messaging();
-
-
-
-// 알림 클릭
-
-self.addEventListener(
-"notificationclick",
-function(event){
-
-    event.notification.close();
-
-
-    event.waitUntil(
-
-        clients.openWindow(
-            "https://sunyoung-approval-system.onrender.com/main"
-        )
-
-    );
-
-});
-
-
-
-
-// ==========================
-// 알림 클릭
+// 알림 클릭 처리만 담당
 // ==========================
 
 self.addEventListener(
-
 "notificationclick",
-
 function(event){
 
 
@@ -110,7 +48,6 @@ function(event){
 
     event.waitUntil(
 
-
         clients.matchAll({
 
             type:"window",
@@ -121,7 +58,6 @@ function(event){
 
 
         .then(function(clientList){
-
 
 
             for(
@@ -135,7 +71,6 @@ function(event){
                     )
                 ){
 
-
                     return client.focus();
 
                 }
@@ -143,10 +78,9 @@ function(event){
             }
 
 
-
             return clients.openWindow(
 
-                event.notification.data.url
+                "https://sunyoung-approval-system.onrender.com/main"
 
             );
 
@@ -156,6 +90,4 @@ function(event){
     );
 
 
-}
-
-);
+});
