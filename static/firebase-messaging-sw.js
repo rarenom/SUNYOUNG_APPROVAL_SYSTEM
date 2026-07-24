@@ -34,87 +34,54 @@ const messaging = firebase.messaging();
 // 백그라운드 푸시 수신
 // ==========================
 
-messaging.onBackgroundMessage(function(payload){
+importScripts(
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"
+);
 
-
-    console.log(
-        "백그라운드 메시지:",
-        payload
-    );
-
-
-
-    const title =
-
-        payload.data?.title
-
-        ||
-
-        "선영알림";
+importScripts(
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"
+);
 
 
 
+firebase.initializeApp({
 
-    const options = {
+    apiKey: "AIzaSyAMMkwzgYJXT6iKP0WvNT6HSUMAy9Imw0",
 
-    body:
+    authDomain: "sunyoung-erp-push.firebaseapp.com",
 
-    payload.data?.body
+    projectId: "sunyoung-erp-push",
 
-    ||
+    storageBucket: "sunyoung-erp-push.firebasestorage.app",
 
-    "새로운 알림이 있습니다.",
+    messagingSenderId: "1055876715145",
 
+    appId: "1:1055876715145:web:f073ec7cef610fd830ac58"
 
-    icon:
-
-    "https://sunyoung-approval-system.onrender.com/static/icon.png",
-
-
-    badge:
-
-    "https://sunyoung-approval-system.onrender.com/static/icon.png",
-
-
-    vibrate:[
-
-        500,
-        200,
-        500,
-        200,
-        500
-
-    ],
-
-
-    requireInteraction:true,
+});
 
 
 
+const messaging = firebase.messaging();
 
-        data:{
 
 
-            url:
+// 알림 클릭
 
+self.addEventListener(
+"notificationclick",
+function(event){
+
+    event.notification.close();
+
+
+    event.waitUntil(
+
+        clients.openWindow(
             "https://sunyoung-approval-system.onrender.com/main"
-
-
-        }
-
-
-    };
-
-
-
-    self.registration.showNotification(
-
-        title,
-
-        options
+        )
 
     );
-
 
 });
 
