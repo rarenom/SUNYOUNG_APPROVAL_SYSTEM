@@ -418,6 +418,18 @@ SUNYOUNG 전자결재 SYSTEM
 
 🔴
 
+{% for notice in notices %}
+
+
+<div class="notice-item"
+onclick="toggleNotice({{ notice[0] }})"
+style="cursor:pointer;">
+
+
+{% if notice[4] == 1 %}
+
+🔴
+
 {% else %}
 
 📌
@@ -425,7 +437,10 @@ SUNYOUNG 전자결재 SYSTEM
 {% endif %}
 
 
+<b>
 {{ notice[1] }}
+</b>
+
 
 
 <div class="notice-date">
@@ -433,6 +448,30 @@ SUNYOUNG 전자결재 SYSTEM
 {{ notice[5] }}
 
 </div>
+
+
+
+<!-- 공지 내용 -->
+
+<div 
+id="notice{{ notice[0] }}"
+style="
+display:none;
+margin-top:15px;
+padding:15px;
+background:#ffffff;
+border-radius:10px;
+border:1px solid #e2e8f0;
+white-space:pre-line;
+color:#334155;
+">
+
+
+{{ notice[2] }}
+
+
+</div>
+
 
 
 </div>
@@ -681,12 +720,40 @@ style="margin-top:10px;"
 
 {% endif %}
 
-
-
 </div>
 
 
+<script>
+
+function toggleNotice(id){
+
+
+    const box = document.getElementById(
+        "notice" + id
+    );
+
+
+    if(box.style.display === "none"){
+
+        box.style.display="block";
+
+    }
+    else{
+
+        box.style.display="none";
+
+    }
+
+
+}
+
+</script>
+
+
+
 <script type="module">
+
+
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
