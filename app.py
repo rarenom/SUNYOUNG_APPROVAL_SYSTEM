@@ -1827,7 +1827,7 @@ def send_notice_push(message):
 
                 data={
 
-                    title="선영알림",
+                    "title":"선영알림",
 
                     "body":message
 
