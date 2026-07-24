@@ -55,61 +55,23 @@ def send_push(role, message):
 
             msg = messaging.Message(
 
-            notification=messaging.Notification(
-                title="선영알림",
-                body=message
-            ),
-
-
-            data={
-                "title": "선영알림",
-                "body": message
-            },
-
-
-            # ==========================
-            # 안드로이드 기본 알림음
-            # ==========================
-
-            android=messaging.AndroidConfig(
-
-                priority="high",
-
-                notification=messaging.AndroidNotification(
-
-                    sound="default"
-
-                )
-
-            ),
-
-
-
-            webpush=messaging.WebpushConfig(
-
-                headers={
-                    "Urgency":"high"
+                data={
+                    "title":"선영알림",
+                    "body":message
                 },
 
-                notification=messaging.WebpushNotification(
 
-                    title="선영알림",
+                webpush=messaging.WebpushConfig(
 
-                    body=message,
+                    headers={
+                        "Urgency":"high"
+                    }
 
-                    icon="https://sunyoung-approval-system.onrender.com/static/icon.png",
-
-                    badge="https://sunyoung-approval-system.onrender.com/static/icon.png",
-
-                    require_interaction=True
-
-                )
-
-            ),
+                ),
 
 
-            token=token
-        )
+                token=token
+            )
 
             response = messaging.send(msg)
 
@@ -143,38 +105,24 @@ def send_push_user(name, message):
 
             msg = messaging.Message(
 
-                notification=messaging.Notification(
-                    title="SUNYOUNG ERP",
-                    body=message
-                ),
-
                 data={
-                    "title": "SUNYOUNG ERP",
-                    "body": message
+                    "title":"SUNYOUNG ERP",
+                    "body":message
                 },
 
-                android=messaging.AndroidConfig(
 
-                    priority="high",
+                webpush=messaging.WebpushConfig(
 
-                    notification=messaging.AndroidNotification(
-
-                        sound="default"
-
-                    )
+                    headers={
+                        "Urgency":"high"
+                    }
 
                 ),
 
-                webpush=messaging.WebpushConfig(
-                    notification=messaging.WebpushNotification(
-                    title="SUNYOUNG ERP",
-                    body=message,
-                    icon="/static/icon.png"
-                    )
-                ),   
 
                 token=user[0]
-            )
+
+            )            
 
             response = messaging.send(msg)
 
@@ -1813,18 +1761,6 @@ def send_notice_push(message):
 
             msg = messaging.Message(
 
-
-
-                notification = messaging.Notification(
-
-                    title="선영알림",
-
-                    body=message
-
-                ),
-
-
-
                 data={
 
                     "title":"선영알림",
@@ -1834,44 +1770,15 @@ def send_notice_push(message):
                 },
 
 
-
-                android = messaging.AndroidConfig(
-
-                    priority="high",
-
-                    notification=messaging.AndroidNotification(
-
-                        sound="default"
-
-                    )
-
-                ),
-
-
-
-                webpush = messaging.WebpushConfig(
+                webpush=messaging.WebpushConfig(
 
                     headers={
 
                         "Urgency":"high"
 
-                    },
-
-
-                    notification=messaging.WebpushNotification(
-
-                        title="SUNYOUNG 공지사항",
-
-                        body=message,
-
-                        icon="/static/icon.png",
-
-                        badge="/static/icon.png"
-
-                    )
+                    }
 
                 ),
-
 
 
                 token=token
