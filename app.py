@@ -55,11 +55,6 @@ def send_push(role, message):
 
             msg = messaging.Message(
 
-                notification=messaging.Notification(
-                    title="선영알림",
-                    body=message
-                ),
-
                 data={
                     "title":"선영알림",
                     "body":message
@@ -70,10 +65,6 @@ def send_push(role, message):
                 ),
 
                 webpush=messaging.WebpushConfig(
-                    notification=messaging.WebpushNotification(
-                        title="선영알림",
-                        body=message
-                    ),
                     headers={
                         "Urgency":"high"
                     }
@@ -111,13 +102,7 @@ def send_push_user(name, message):
     if user and user[0]:
 
         try:
-
             msg = messaging.Message(
-
-                notification=messaging.Notification(
-                    title="SUNYOUNG ERP",
-                    body=message
-                ),
 
                 data={
                     "title":"SUNYOUNG ERP",
@@ -129,17 +114,14 @@ def send_push_user(name, message):
                 ),
 
                 webpush=messaging.WebpushConfig(
-                    notification=messaging.WebpushNotification(
-                        title="SUNYOUNG ERP",
-                        body=message
-                    ),
                     headers={
                         "Urgency":"high"
                     }
                 ),
 
                 token=user[0]
-            )           
+            )
+                     
 
             response = messaging.send(msg)
 
@@ -1774,14 +1756,7 @@ def send_notice_push(message):
 
 
         try:
-
-
             msg = messaging.Message(
-
-                notification=messaging.Notification(
-                    title="선영알림",
-                    body=message
-                ),
 
                 data={
                     "title":"선영알림",
@@ -1793,18 +1768,15 @@ def send_notice_push(message):
                 ),
 
                 webpush=messaging.WebpushConfig(
-                    notification=messaging.WebpushNotification(
-                        title="선영알림",
-                        body=message
-                    ),
                     headers={
                         "Urgency":"high"
                     }
                 ),
 
                 token=token
-            ) 
+            )
 
+            
 
 
             response = messaging.send(msg)
