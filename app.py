@@ -1146,34 +1146,74 @@ def approval_status():
     )
     
 # ==========================
-# 다음 승인 단계 계산
+# 신청자 기준 다음 승인 단계 계산
 # ==========================
 
-def get_next_status_by_role(role):
+def get_next_status(applicant, current_role):
 
 
-    # 공장장 승인 후
-    if role=="공장장":
+    conn = get_db()
 
-        return "담당자 확인 대기"
-
+    cur = conn.cursor()
 
 
-    # 담당자 확인 후
-    elif role=="담당자":
+    cur.execute("""
+    SELECT factory_approval,
+           manager_approval
+
+    FROM users
+
+    WHERE name=%s
+    """,
+    (applicant,))
+
+
+    user = cur.fetchone()
+
+
+    conn.close()
+
+
+    if not user:
 
         return "대표 승인 대기"
 
 
 
-    # 대표 승인 후
-    elif role=="대표":
+    factory = user[0]
+
+    manager = user[1]
+
+
+
+    if current_role == "공장장":
+
+
+        if manager == 1:
+
+            return "담당자 확인 대기"
+
+        else:
+
+            return "대표 승인 대기"
+
+
+
+    elif current_role == "담당자":
+
+
+        return "대표 승인 대기"
+
+
+
+    elif current_role == "대표":
+
 
         return "최종 승인 완료"
 
 
 
-    return "최종 승인 완료"
+    return "대표 승인 대기"
 
 
 
@@ -1329,8 +1369,10 @@ def approve(id,kind):
 
 
 
-    next_status=get_next_status_by_role(role)
-
+    next_status=get_next_status(
+        applicant,
+        role
+    )
 
 
     now = now_korea().strftime("%Y-%m-%d %H:%M:%S")
