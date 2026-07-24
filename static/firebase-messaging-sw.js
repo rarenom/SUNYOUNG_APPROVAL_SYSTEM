@@ -50,43 +50,45 @@ messaging.onBackgroundMessage(function(payload){
 
         ||
 
-        "SUNYOUNG ERP";
+        "선영알림";
 
 
 
 
     const options = {
 
+    body:
 
-        body:
+    payload.data?.body
 
-        payload.data?.body
+    ||
 
-        ||
-
-        "새로운 알림이 있습니다.",
-
+    "새로운 알림이 있습니다.",
 
 
-        icon:
+    icon:
 
-        "https://sunyoung-approval-system.onrender.com/static/icon.png",
-
-
-
-        badge:
-
-        "https://sunyoung-approval-system.onrender.com/static/icon.png",
+    "https://sunyoung-approval-system.onrender.com/static/icon.png",
 
 
+    badge:
 
-        vibrate:[
+    "https://sunyoung-approval-system.onrender.com/static/icon.png",
 
-            200,
-            100,
-            200
 
-        ],
+    vibrate:[
+
+        500,
+        200,
+        500,
+        200,
+        500
+
+    ],
+
+
+    requireInteraction:true,
+
 
 
 

@@ -56,13 +56,13 @@ def send_push(role, message):
             msg = messaging.Message(
 
             notification=messaging.Notification(
-                title="SUNYOUNG ERP",
+                title="선영알림",
                 body=message
             ),
 
 
             data={
-                "title": "SUNYOUNG ERP",
+                "title": "선영알림",
                 "body": message
             },
 
@@ -88,21 +88,20 @@ def send_push(role, message):
             webpush=messaging.WebpushConfig(
 
                 headers={
-
                     "Urgency":"high"
-
                 },
-
 
                 notification=messaging.WebpushNotification(
 
-                    title="SUNYOUNG ERP",
+                    title="선영알림",
 
                     body=message,
 
-                    icon="/static/icon.png",
+                    icon="https://sunyoung-approval-system.onrender.com/static/icon.png",
 
-                    badge="/static/icon.png"
+                    badge="https://sunyoung-approval-system.onrender.com/static/icon.png",
+
+                    require_interaction=True
 
                 )
 
@@ -1818,7 +1817,7 @@ def send_notice_push(message):
 
                 notification = messaging.Notification(
 
-                    title="SUNYOUNG 공지사항",
+                    title="선영알림",
 
                     body=message
 
@@ -1828,7 +1827,7 @@ def send_notice_push(message):
 
                 data={
 
-                    "title":"SUNYOUNG 공지사항",
+                    title="선영알림",
 
                     "body":message
 
